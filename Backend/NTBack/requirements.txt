@@ -1,0 +1,52 @@
+# Django核心框架
+Django==5.2.3
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+djangorestframework-simplejwt==5.3.0
+
+### 可能需要的驱动
+
+# MySQL数据库驱动
+# mysqlclient
+# Redis缓存
+# redis
+# 数据库连接池
+# django-db-connection-pool
+
+# Celery异步任务
+# celery
+# Redis作为Celery后端
+# redis
+
+# 数据处理
+# pandas
+# numpy
+
+# 机器学习
+# scikit-learn
+# scipy
+
+# 数据可视化
+# matplotlib
+# seaborn
+# plotly
+
+# 网络数据包处理
+# scapy
+# pyshark
+# 网络协议分析
+# dpkt
+
+# 文件上传和处理
+# Pillow
+# python-magic
+
+# Excel文件处理
+# openpyxl
+# xlrd
+
+# 其他
+# django-extensions
+# django-debug-toolbar
+# django-silk
+# django-cprofile-middleware

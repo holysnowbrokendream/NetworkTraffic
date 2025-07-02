@@ -1,5 +1,8 @@
 # NetworkTraffic
 
+# Backend 目录内为后端
+## 详情请见 Backend/README.md
+
 # Modle 目录用于微调大模型
 
 # UI 目录内为前端页面
