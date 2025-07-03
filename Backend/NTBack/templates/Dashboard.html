@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>个人主页 - 网络流量分析系统</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+        .container {
+            max-width: 500px;
+            margin: 60px auto;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            padding: 40px 30px;
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #4CAF50;
+            color: #fff;
+            font-size: 2.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+        }
+        .username {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .user-type {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+        }
+        .info-list {
+            margin-bottom: 30px;
+        }
+        .info-list dt {
+            float: left;
+            width: 80px;
+            color: #666;
+            font-weight: 500;
+        }
+        .info-list dd {
+            margin-left: 90px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .clearfix::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+        .btn-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #4CAF50;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #388e3c;
+        }
+        .btn-logout {
+            background: #f44336;
+            color: #fff;
+        }
+        .btn-logout:hover {
+            background: #b71c1c;
+        }
+        .success-message {
+            color: #4CAF50;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .error-message {
+            color: #f44336;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="avatar">{{ username|first|upper }}</div>
+        <div class="username">{{ username }}</div>
+        <div class="user-type">类型：{{ user_type }}</div>
+        <dl class="info-list clearfix">
+            <dt>邮箱：</dt>
+            <dd>{{ email|default:"未绑定" }}</dd>
+            <dt>手机号：</dt>
+            <dd>{{ phonenumber|default:"未绑定" }}</dd>
+            <dt>注册时间：</dt>
+            <dd>{{ created_at }}</dd>
+            <dt>更新时间：</dt>
+            <dd>{{ updated_at }}</dd>
+        </dl>
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="showEditForm()">修改信息</button>
+            <button class="btn btn-logout" onclick="logout()">退出登录</button>
+        </div>
+        <div class="success-message" id="successMsg"></div>
+        <div class="error-message" id="errorMsg"></div>
+        <!-- 修改信息表单（默认隐藏） -->
+        <form id="editForm" style="display:none; margin-top:30px;" method="post">
+            {% csrf_token %}
+            <div style="margin-bottom:15px;">
+                <label>邮箱：</label>
+                <input type="email" name="email" id="editEmail" value="{{ email|default_if_none:'' }}" style="width:70%;padding:8px;">
+            </div>
+            <div style="margin-bottom:15px;">
+                <label>手机号：</label>
+                <input type="text" name="phonenumber" id="editPhone" value="{{ phonenumber|default_if_none:'' }}" style="width:70%;padding:8px;">
+            </div>
+            <div style="margin-bottom:15px;">
+                <label>密码：</label>
+                <input type="password" name="password" id="editPassword" placeholder="不修改请留空" style="width:70%;padding:8px;">
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary" onclick="submitEdit()">保存</button>
+                <button type="button" class="btn" onclick="hideEditForm()">取消</button>
+            </div>
+        </form>
+    </div>
+    <script>
+        function showEditForm() {
+            document.getElementById('editForm').style.display = 'block';
+        }
+        function hideEditForm() {
+            document.getElementById('editForm').style.display = 'none';
+        }
+        function logout() {
+            fetch('{% url "logout" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => {
+                window.location.href = '{% url "home" %}';
+            });
+        }
+        function submitEdit() {
+            const email = document.getElementById('editEmail').value;
+            const phonenumber = document.getElementById('editPhone').value;
+            const password = document.getElementById('editPassword').value;
+            const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            fetch(window.location.pathname, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrf,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({email, phonenumber, password})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    document.getElementById('successMsg').textContent = data.message;
+                    document.getElementById('successMsg').style.display = 'block';
+                    document.getElementById('errorMsg').style.display = 'none';
+                    setTimeout(() => window.location.reload(), 1200);
+                } else {
+                    document.getElementById('errorMsg').textContent = data.message;
+                    document.getElementById('errorMsg').style.display = 'block';
+                    document.getElementById('successMsg').style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html> 

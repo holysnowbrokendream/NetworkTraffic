@@ -33,7 +33,7 @@ DEBUG = True
 ### 允许的主机列表，请勿在生产模式下赋值为空
 ALLOWED_HOSTS = []
 
-### 安装的应用程序列表
+### 安装的应用程序列表，后续新建应用都需要在此添加
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'apps.Sampleapp.apps.SampleappConfig',
 ]
 
 ### 中间件列表
@@ -61,10 +62,11 @@ ROOT_URLCONF = 'NTBack.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR/'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -93,11 +95,11 @@ WSGI_APPLICATION = 'NTBack.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'your-database-name',
-        'USER': 'your-database-user',
-        'PASSWORD': 'your-database-password',
-        'HOST': 'your-database-host',
-        'PORT': 'your-database-port',
+        'NAME': 'NetworkTraffic',
+        'USER': 'root',
+        'PASSWORD': 'hxh13618581590',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
 
