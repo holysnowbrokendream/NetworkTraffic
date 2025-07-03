@@ -10,6 +10,10 @@ env/
 .venv/
 __pypackages__/
 
+# IDE and editor configs
+.idea/
+.vscode/
+
 # Sensitive information
 settings/local.py
 settings/secret.py
