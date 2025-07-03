@@ -1,9 +1,13 @@
 <template>
+  <!-- 首页布局，包含欢迎语、统计信息、趋势图和告警表格 -->
   <el-row justify="center" style="margin-top:8px;">
     <el-col :span="24">
       <el-card class="home-card">
+        <!-- 欢迎标题 -->
         <div class="home-title">欢迎来到网络流量大模型平台</div>
+        <!-- 平台描述 -->
         <div class="home-desc">这里可以查看网络流量总览、模型分析等信息。</div>
+        <!-- 统计信息区 -->
         <el-row :gutter="24" class="stats-list">
           <el-col :span="8">
             <el-statistic title="今日流量" :value="'- GB'" />
@@ -17,6 +21,7 @@
         </el-row>
         <el-divider />
         <el-row :gutter="32">
+          <!-- 左侧趋势图 -->
           <el-col :xs="24" :md="12">
             <div class="chart-area">
               <div style="font-weight:500;color:#3578e5;margin-bottom:8px;">流量趋势</div>
@@ -27,6 +32,7 @@
               <div ref="abnormalChart" style="width:100%;max-width:520px;height:220px;margin:0 auto;"></div>
             </div>
           </el-col>
+          <!-- 右侧告警表格 -->
           <el-col :xs="24" :md="12">
             <el-card shadow="never" class="alarm-card">
               <div style="font-weight:500;color:#e74c3c;margin-bottom:8px;">最新告警</div>
@@ -52,8 +58,8 @@ export default {
   name: 'TrafficHome',
   data() {
     return {
-      timer: null,
-      abnormalTimer: null,
+      timer: null, // 定时器句柄-流量趋势
+      abnormalTimer: null, // 定时器句柄-异常趋势
       alarmData: [
         { time: '2024-06-01', type: 'DDoS', desc: '检测到大流量攻击' },
         { time: '2024-06-02', type: '端口扫描', desc: '异常端口扫描行为' },
@@ -64,14 +70,15 @@ export default {
   mounted() {
     this.initChart();
     this.initAbnormalChart();
-    this.timer = setInterval(this.initChart, 10000); // 每10秒刷新
-    this.abnormalTimer = setInterval(this.initAbnormalChart, 10000);
+    this.timer = setInterval(this.initChart, 10000); // 每10秒刷新流量趋势
+    this.abnormalTimer = setInterval(this.initAbnormalChart, 10000); // 每10秒刷新异常趋势
   },
   beforeUnmount() {
     clearInterval(this.timer);
     clearInterval(this.abnormalTimer);
   },
   methods: {
+    // 初始化流量趋势图
     async initChart() {
       // 模拟接口请求
       // const res = await axios.get('/api/traffic/trend');
@@ -90,6 +97,7 @@ export default {
         grid: { left: 40, right: 20, top: 30, bottom: 30 },
       });
     },
+    // 初始化异常趋势图
     async initAbnormalChart() {
       // 模拟异常趋势数据
       const data = {
@@ -111,6 +119,7 @@ export default {
 </script>
 
 <style scoped>
+/* 首页卡片样式 */
 .home-card {
   background: #fff;
   border-radius: 14px;

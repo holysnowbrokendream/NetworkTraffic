@@ -1,10 +1,13 @@
 <template>
+  <!-- 模型分析页面，展示大模型分析结果和告警历史 -->
   <el-row justify="center" style="margin-top:40px;">
     <el-col :span="24">
       <el-card class="model-card">
+        <!-- 标题和描述 -->
         <div class="model-title">模型分析</div>
         <div class="model-desc">此处展示大模型对网络流量的分析结果。</div>
         <el-row :gutter="32" style="margin-bottom:24px;">
+          <!-- 左侧饼图和统计 -->
           <el-col :xs="24" :md="12">
             <el-card shadow="never" class="stat-card">
               <el-row :gutter="16">
@@ -16,10 +19,11 @@
                 </el-col>
               </el-row>
               <el-divider />
-              <div style="font-weight:500;color:#3578e5;margin-bottom:8px;">异常类型分布</div>
+              <div style="font-weight:500;color:#3578e5;margin-bottom:8px;">异常类别分布</div>
               <div ref="pieChart" style="width:100%;max-width:340px;height:260px;margin:0 auto;"></div>
             </el-card>
           </el-col>
+          <!-- 右侧告警历史表格 -->
           <el-col :xs="24" :md="12">
             <el-card shadow="never" class="alarm-card">
               <div style="font-weight:500;color:#3578e5;margin-bottom:8px;">告警历史</div>
@@ -32,6 +36,7 @@
             </el-card>
           </el-col>
         </el-row>
+        <!-- 模型版本信息 -->
         <div style="text-align:right;color:#888;font-size:14px;">模型版本：-</div>
       </el-card>
     </el-col>
@@ -46,7 +51,7 @@ export default {
   name: 'ModelAnalysis',
   data() {
     return {
-      timer: null,
+      timer: null, // 定时器句柄
       alarmData: [
         // 示例数据，后端接入时替换
         { time: '2024-06-01', type: 'DDoS', desc: '检测到大流量攻击' },
@@ -80,7 +85,7 @@ export default {
         legend: { orient: 'horizontal', bottom: 0, left: 'center' },
         series: [
           {
-            name: '异常类型',
+            name: '异常类别',
             type: 'pie',
             radius: ['50%', '75%'],
             center: ['50%', '45%'],

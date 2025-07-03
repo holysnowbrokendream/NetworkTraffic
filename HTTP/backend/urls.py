@@ -17,7 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+# 项目主路由配置
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('userauth.urls')),
+    path('admin/', admin.site.urls),  # Django后台管理
+    path('', include('userauth.urls')),  # 用户认证相关接口
 ]

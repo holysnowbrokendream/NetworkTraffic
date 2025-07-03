@@ -1,7 +1,9 @@
 <template>
+  <!-- 登录页面主容器 -->
   <div class="login-container">
     <el-card class="login-card">
       <h2 class="login-title">登录</h2>
+      <!-- 登录表单 -->
       <el-form :model="form" @submit.prevent="login" @keyup.enter="login">
         <el-form-item>
           <el-input v-model="form.username" placeholder="用户名" clearable prefix-icon="el-icon-user" />
@@ -13,11 +15,14 @@
           <el-button type="primary" style="width:100%;" @click="login">登录</el-button>
         </el-form-item>
       </el-form>
+      <!-- 注册入口 -->
       <div style="text-align:center;margin-top:8px;">
         <el-button type="text" @click="showRegister=true">没有账号？注册</el-button>
       </div>
+      <!-- 登录错误提示 -->
       <div v-if="error" class="login-error">{{ error }}</div>
     </el-card>
+    <!-- 注册弹窗 -->
     <el-dialog v-model="showRegister" title="注册新账号" width="340px" :close-on-click-modal="false">
       <el-form :model="registerForm">
         <el-form-item label="用户名">
@@ -42,20 +47,23 @@ export default {
   name: 'LoginPage',
   data() {
     return {
+      // 登录表单数据
       form: {
         username: '',
         password: ''
       },
-      error: '',
-      showRegister: false,
+      error: '', // 登录错误提示
+      showRegister: false, // 注册弹窗显示状态
+      // 注册表单数据
       registerForm: {
         username: '',
         password: ''
       },
-      registerMsg: ''
+      registerMsg: '' // 注册结果提示
     };
   },
   methods: {
+    // 登录方法，调用后端接口校验
     async login() {
       this.error = '';
       try {
@@ -63,6 +71,7 @@ export default {
           username: this.form.username,
           password: this.form.password
         });
+        // 登录成功后保存token和登录状态
         localStorage.setItem('access', res.data.access);
         localStorage.setItem('refresh', res.data.refresh);
         localStorage.setItem('isLogin', '1');
@@ -73,6 +82,7 @@ export default {
         this.error = '登录失败';
       }
     },
+    // 注册方法，调用后端注册接口
     async register() {
       this.registerMsg = '';
       try {
@@ -103,6 +113,7 @@ export default {
 </script>
 
 <style scoped>
+/* 登录页面主容器样式 */
 .login-container {
   min-height: 100vh;
   display: flex;
@@ -112,6 +123,7 @@ export default {
   box-sizing: border-box;
   padding: 0 12px;
 }
+/* 登录卡片样式 */
 .login-card {
   max-width: 360px;
   width: 100%;

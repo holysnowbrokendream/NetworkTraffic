@@ -1,7 +1,9 @@
 <template>
   <div id="app">
     <el-container style="min-height:100vh;">
+      <!-- 非登录页时显示侧边栏和主内容区 -->
       <template v-if="$route.path !== '/login'">
+        <!-- 侧边导航栏 -->
         <el-aside
           :width="collapsed ? '56px' : '180px'"
           class="side-nav"
@@ -9,7 +11,9 @@
           @mouseleave="collapsed=true"
         >
           <div class="side-nav-inner">
+            <!-- 平台Logo -->
             <div class="side-logo" :class="{hide: collapsed}">网络流量平台</div>
+            <!-- 菜单项列表 -->
             <ul class="side-menu">
               <li :class="['side-menu-item', {active: $route.path==='/' }]" @click="$router.push('/')">
                 <i class="el-icon-house"></i>
@@ -28,6 +32,7 @@
                 <span class="side-menu-text" :class="{hide: collapsed}">系统设置</span>
               </li>
             </ul>
+            <!-- 登出按钮，固定在侧边栏左下角，收缩时只显示图标 -->
             <div v-if="isLogin" class="side-logout">
               <el-button type="danger" size="small" @click="logout" style="width:100%;display:flex;align-items:center;justify-content:center;">
                 <i class="el-icon-switch-button" style="margin-right:6px;"></i>
@@ -39,6 +44,7 @@
       </template>
       <el-container>
         <el-main>
+          <!-- 路由页面内容 -->
           <router-view />
         </el-main>
       </el-container>
@@ -55,11 +61,13 @@ export default {
     };
   },
   computed: {
+    // 判断是否已登录，控制登出按钮显示
     isLogin() {
       return localStorage.getItem('isLogin') === '1';
     }
   },
   methods: {
+    // 登出方法，清除登录状态并跳转到登录页
     logout() {
       localStorage.removeItem('isLogin');
       this.$router.replace('/login');
@@ -70,6 +78,7 @@ export default {
 
 <style>
 .side-nav {
+  /* 侧边栏样式 */
   background: linear-gradient(180deg, #3578e5 0%, #5fa8ef 100%);
   min-height: 100vh;
   transition: width 0.2s;
@@ -81,6 +90,7 @@ export default {
   padding: 0;
 }
 .side-nav-inner {
+  /* 侧边栏内部采用绝对定位，方便登出按钮固定底部 */
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -90,6 +100,7 @@ export default {
   transition: background 0.2s;
 }
 .side-logo {
+  /* 平台Logo样式 */
   color: #fff;
   font-size: 18px;
   font-weight: bold;
@@ -106,6 +117,7 @@ export default {
   pointer-events: none;
 }
 .side-menu {
+  /* 菜单项列表样式 */
   list-style: none;
   padding: 0;
   margin: 0;
@@ -113,6 +125,7 @@ export default {
   min-height: 0;
 }
 .side-menu-item {
+  /* 菜单项样式 */
   display: flex;
   align-items: center;
   color: #fff;
@@ -145,6 +158,7 @@ export default {
   pointer-events: none;
 }
 .side-logout {
+  /* 登出按钮固定在侧边栏底部 */
   position: absolute;
   left: 0;
   bottom: 0;
