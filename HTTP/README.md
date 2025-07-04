@@ -23,3 +23,5 @@ tips: 若创建新用户，需给予权限
 # conda环境
 导出环境    `conda env export --no-builds | grep -v "prefix" | grep -v "platform" > environment.yml`
 导入环境    `conda env create -f environment.yml`
+导出依赖    `conda list --explicit > spec-file.txt`
+导入依赖    `conda create --name your_env --file spec-file.txt`
