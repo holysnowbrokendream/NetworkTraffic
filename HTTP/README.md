@@ -1,5 +1,5 @@
 # 初次运行
-1. conda env create -f NWT_environment.yml
+1. `conda env create -f environment.yml`
 2. 激活新建的conda环境
 3. 配置数据库（如下）
 4. 运行 `python manage.py runserver`
@@ -19,3 +19,7 @@ tips: 若创建新用户，需给予权限
 
 # 运行
 运行 `python manage.py runserver` 即可启动后端
+
+# conda环境
+导出环境    `conda env export --no-builds | grep -v "prefix" | grep -v "platform" > environment.yml`
+导入环境    `conda env create -f environment.yml`
