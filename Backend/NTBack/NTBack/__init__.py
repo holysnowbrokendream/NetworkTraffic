@@ -1,13 +1,4 @@
-from django.conf import settings
-import MySQLdb
-
-db = MySQLdb.connect(
-    host=settings.DATABASES['default']['HOST'],
-    user=settings.DATABASES['default']['USER'],
-    password=settings.DATABASES['default']['PASSWORD'],
-    database=settings.DATABASES['default']['NAME']
-)
-
-cursor = db.cursor()
+# 数据库连接代码已移除，使用 Django ORM 进行数据库操作
+# 如果需要直接数据库连接，请在需要的地方创建连接
 
 

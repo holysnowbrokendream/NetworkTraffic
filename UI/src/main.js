@@ -1,6 +1,8 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import { createRouter, createWebHistory } from 'vue-router'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
 
 import TrafficHome from './components/Home.vue'
 import TrafficDetail from './components/Traffic.vue'
@@ -34,4 +36,5 @@ router.beforeEach((to, from, next) => {
 
 const app = createApp(App)
 app.use(router)
+app.use(ElementPlus)
 app.mount('#app')

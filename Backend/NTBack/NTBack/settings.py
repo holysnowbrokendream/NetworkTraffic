@@ -96,8 +96,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'NetworkTraffic',
-        'USER': 'root',
-        'PASSWORD': 'hxh13618581590',
+        'USER': 'nwt_user',
+        'PASSWORD': '123456',
         'HOST': 'localhost',
         'PORT': '3306',
     }

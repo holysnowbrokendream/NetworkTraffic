@@ -1,57 +1,60 @@
 <template>
-  <div>
-    <h2>流量明细</h2>
-    <div style="margin-bottom: 16px;">
-      <!-- 上传区域 -->
-      <form @submit.prevent="uploadFile" style="display:inline-block;margin-right:16px;">
-        <input type="file" @change="onFileChange" accept=".csv,.pcap,.psap,.txt" />
-        <button type="submit" :disabled="!selectedFile || uploading">上传</button>
-      </form>
-      <span style="font-size:12px;color:#888;">支持 .csv, .pcap, .psap, .txt 文件</span>
-      <span v-if="uploading">上传中...</span>
-      <span v-if="uploadMsg" :style="{color: uploadSuccess ? 'green' : 'red'}">{{ uploadMsg }}</span>
+  <!-- 流量明细页面，支持数据上传、筛选和分页展示 -->
+  <el-card class="traffic-card">
+    <h2 style="color:#3578e5;margin-bottom:18px;">流量明细</h2>
+    <!-- 上传区域 -->
+    <div class="upload-area">
+      <el-upload
+        class="upload-demo"
+        drag
+        :show-file-list="false"
+        :before-upload="beforeUpload"
+        :http-request="uploadFile"
+        accept=".csv,.pcap,.psap,.txt"
+      >
+        <el-button type="primary">点击或拖拽上传流量数据</el-button>
+        <template #tip>
+          <div class="el-upload__tip">支持 .csv, .pcap, .psap, .txt 文件</div>
+        </template>
+      </el-upload>
+      <!-- 上传结果提示 -->
+      <el-alert v-if="uploadMsg" :title="uploadMsg" :type="uploadSuccess ? 'success' : 'error'" show-icon style="margin-left:12px;" :closable="false" />
     </div>
-    <div style="margin-bottom: 16px;">
-      <input v-model="search" placeholder="搜索IP/状态" style="margin-right:8px;" />
-      <select v-model="filterStatus" style="margin-right:8px;">
-        <option value="">全部状态</option>
-        <option value="正常">正常</option>
-        <option value="异常">异常</option>
-      </select>
-      <button @click="resetFilter">重置</button>
+    <!-- 筛选区域 -->
+    <div class="filter-area">
+      <el-input v-model="search" placeholder="搜索IP/状态" clearable style="width:180px;" />
+      <el-select v-model="filterStatus" placeholder="全部状态" clearable style="width:120px;">
+        <el-option label="全部状态" value="" />
+        <el-option label="正常" value="正常" />
+        <el-option label="异常" value="异常" />
+      </el-select>
+      <el-button @click="resetFilter">重置</el-button>
     </div>
-    <table border="1" cellpadding="8" style="width: 100%;">
-      <thead>
-        <tr>
-          <th>时间</th>
-          <th>源IP</th>
-          <th>目的IP</th>
-          <th>流量大小</th>
-          <th>状态</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="item in pagedData" :key="item.id">
-          <td>{{ item.time }}</td>
-          <td>{{ item.srcIP }}</td>
-          <td>{{ item.dstIP }}</td>
-          <td>{{ item.size }}</td>
-          <td>{{ item.status }}</td>
-        </tr>
-        <tr v-if="pagedData.length === 0">
-          <td colspan="5" style="text-align:center;">暂无数据</td>
-        </tr>
-      </tbody>
-    </table>
-    <div style="margin-top: 16px; text-align:right;">
-      <button :disabled="page===1" @click="page--">上一页</button>
-      <span style="margin:0 8px;">{{ page }}/{{ totalPages }}</span>
-      <button :disabled="page===totalPages" @click="page++">下一页</button>
-    </div>
-  </div>
+    <!-- 数据表格 -->
+    <el-table :data="pagedData" border stripe style="width: 100%;margin-bottom:18px;">
+      <el-table-column prop="time" label="时间" align="center" />
+      <el-table-column prop="srcIP" label="源IP" align="center" />
+      <el-table-column prop="dstIP" label="目的IP" align="center" />
+      <el-table-column prop="size" label="流量大小" align="center" />
+      <el-table-column prop="status" label="状态" align="center" />
+    </el-table>
+    <!-- 无数据提示 -->
+    <div v-if="pagedData.length === 0" style="text-align:center;color:#888;margin-bottom:18px;">暂无数据</div>
+    <!-- 分页控件 -->
+    <el-pagination
+      background
+      layout="prev, pager, next"
+      :total="filteredData.length"
+      :page-size="pageSize"
+      v-model:current-page="page"
+      style="text-align:right;"
+    />
+  </el-card>
 </template>
 
 <script>
+// import axios from 'axios'; // 后端接口接入时再启用
+// 模拟流量明细数据
 const mockData = Array.from({ length: 37 }, (_, i) => ({
   id: i + 1,
   time: `2024-06-0${(i%9)+1} 12:0${i%6}:00`,
@@ -61,25 +64,21 @@ const mockData = Array.from({ length: 37 }, (_, i) => ({
   status: i%5===0 ? '异常' : '正常',
 }));
 
-// import axios from 'axios'; // 后端接口接入时再启用
-
 export default {
   name: 'TrafficDetail',
   data() {
     return {
-      search: '',
-      filterStatus: '',
-      page: 1,
-      pageSize: 10,
-      allData: mockData,
-      // 上传相关
-      selectedFile: null,
-      uploading: false,
-      uploadMsg: '',
-      uploadSuccess: false,
+      search: '', // 搜索关键词
+      filterStatus: '', // 状态筛选
+      page: 1, // 当前页码
+      pageSize: 10, // 每页条数
+      allData: mockData, // 全部流量数据
+      uploadMsg: '', // 上传提示
+      uploadSuccess: false, // 上传结果
     };
   },
   computed: {
+    // 根据搜索和筛选条件过滤数据
     filteredData() {
       let data = this.allData;
       if (this.search) {
@@ -95,58 +94,65 @@ export default {
       }
       return data;
     },
-    totalPages() {
-      return Math.max(1, Math.ceil(this.filteredData.length / this.pageSize));
-    },
+    // 当前页展示的数据
     pagedData() {
       const start = (this.page - 1) * this.pageSize;
       return this.filteredData.slice(start, start + this.pageSize);
     },
   },
-  watch: {
-    filteredData() {
-      this.page = 1;
-    },
-  },
   methods: {
+    // 重置筛选条件
     resetFilter() {
       this.search = '';
       this.filterStatus = '';
     },
-    onFileChange(e) {
-      this.selectedFile = e.target.files[0];
-      this.uploadMsg = '';
+    // 上传前拦截，阻止自动上传
+    beforeUpload() {
+      return false;
     },
+    // 上传文件处理逻辑（可对接后端）
     async uploadFile() {
-      if (!this.selectedFile) return;
-      this.uploading = true;
       this.uploadMsg = '';
       this.uploadSuccess = false;
       try {
-        // 取消注释后端接入
-        // const formData = new FormData();
-        // formData.append('file', this.selectedFile);
-        // const res = await axios.post('/api/upload', formData, {
-        //   headers: { 'Content-Type': 'multipart/form-data' },
-        //   onUploadProgress: progressEvent => {
-        //     // 可选：显示进度
-        //   }
-        // });
-        // this.uploadMsg = '上传成功，正在分析...';
-        // this.uploadSuccess = true;
-        // 可根据res.data处理后续逻辑
-        // mock演示：
         await new Promise(r=>setTimeout(r, 1200));
         this.uploadMsg = '上传成功，正在分析...';
         this.uploadSuccess = true;
       } catch (e) {
         this.uploadMsg = '上传失败';
         this.uploadSuccess = false;
-      } finally {
-        this.uploading = false;
-        this.selectedFile = null;
       }
     },
   },
+  watch: {
+    // 过滤条件变化时重置页码
+    filteredData() {
+      this.page = 1;
+    },
+  },
 };
-</script> 
+</script>
+
+<style scoped>
+/* 流量明细卡片样式 */
+.traffic-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(53,120,229,0.08);
+  padding: 32px 28px 24px 28px;
+  max-width: 900px;
+  margin: 32px auto;
+}
+.upload-area {
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.filter-area {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+</style> 
