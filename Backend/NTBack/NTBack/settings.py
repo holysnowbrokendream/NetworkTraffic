@@ -41,11 +41,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'apps.Sampleapp.apps.SampleappConfig',
+    'corsheaders',  # 添加CORS支持
+    'apps.Transferapp.apps.TransferappConfig',
 ]
 
 ### 中间件列表
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # 添加CORS中间件，必须放在最前面
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -54,6 +56,44 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+### CORS配置
+# 允许所有域名访问（开发环境）
+CORS_ALLOW_ALL_ORIGINS = True
+
+# 生产环境中应该明确指定允许的域名
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",  # Vue开发服务器
+#     "http://127.0.0.1:3000",
+#     "http://localhost:5173",  # Vite开发服务器
+#     "http://127.0.0.1:5173",
+# ]
+
+# 允许的HTTP方法
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# 允许的HTTP头
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# 允许凭证
+CORS_ALLOW_CREDENTIALS = True
 
 ### 根URL配置
 ROOT_URLCONF = 'NTBack.urls'

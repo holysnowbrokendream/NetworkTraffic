@@ -70,13 +70,15 @@ class Sample(models.Model):
         ordering = ['-created_at']
         # permissions = []
 
+
 ### Create your models here.
+# 用户账户模型
 class UserAccount(models.Model):
     id = models.UUIDField(
         primary_key=True, 
         default=uuid.uuid4, 
         editable=False
-        )
+    )
     
     # 账号基础信息设置（必填）
     username = models.CharField(
@@ -84,27 +86,27 @@ class UserAccount(models.Model):
         verbose_name="用户名", 
         unique=True,
         help_text="用户名不能重复"
-        )
+    )
     email = models.EmailField(
         max_length=255, 
         verbose_name="邮箱", 
         unique=True, 
         blank=True, null=True, 
         help_text="邮箱不能重复"
-        )
+    )
     phonenumber = models.CharField(
         max_length=16, 
         verbose_name="手机号", 
         unique=True, 
         blank=False, null=False, 
         help_text="手机号不能为空"
-        )
+    )
     password = models.CharField(
         max_length=255, 
         verbose_name="密码", 
         blank=False, null=False, 
         help_text="密码不能为空"
-        )
+    )
     
     # 添加用户类型
     USER_TYPE_CHOICES = [
