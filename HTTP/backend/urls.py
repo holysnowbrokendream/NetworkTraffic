@@ -16,9 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from userauth import views as userauth_views
 
 # 项目主路由配置
 urlpatterns = [
     path('admin/', admin.site.urls),  # Django后台管理
+    path('api/llm/chat/', userauth_views.llm_chat),
+    path('api/llm/upload/', userauth_views.llm_upload),
     path('', include('userauth.urls')),  # 用户认证相关接口
 ]

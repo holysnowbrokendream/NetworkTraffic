@@ -1,158 +1,215 @@
 <template>
-  <!-- 首页布局，包含欢迎语、统计信息、趋势图和告警表格 -->
-  <el-row justify="center" style="margin-top:8px;">
-    <el-col :span="24">
-      <el-card class="home-card">
-        <!-- 欢迎标题 -->
-        <div class="home-title">欢迎来到网络流量大模型平台</div>
-        <!-- 平台描述 -->
-        <div class="home-desc">这里可以查看网络流量总览、模型分析等信息。</div>
-        <!-- 统计信息区 -->
-        <el-row :gutter="24" class="stats-list">
-          <el-col :span="8">
-            <el-statistic title="今日流量" :value="'- GB'" />
-          </el-col>
-          <el-col :span="8">
-            <el-statistic title="异常流量" :value="'- 次'" />
-          </el-col>
-          <el-col :span="8">
-            <el-statistic title="模型告警" :value="'- 条'" />
-          </el-col>
-        </el-row>
-        <el-divider />
-        <el-row :gutter="32">
-          <!-- 左侧趋势图 -->
-          <el-col :xs="24" :md="12">
-            <div class="chart-area">
-              <div style="font-weight:500;color:#3578e5;margin-bottom:8px;">流量趋势</div>
-              <div ref="chart" style="width:100%;max-width:520px;height:300px;margin:0 auto;"></div>
-            </div>
-            <div class="chart-area" style="margin-top:18px;">
-              <div style="font-weight:500;color:#e67e22;margin-bottom:8px;">异常趋势</div>
-              <div ref="abnormalChart" style="width:100%;max-width:520px;height:220px;margin:0 auto;"></div>
-            </div>
-          </el-col>
-          <!-- 右侧告警表格 -->
-          <el-col :xs="24" :md="12">
-            <el-card shadow="never" class="alarm-card">
-              <div style="font-weight:500;color:#e74c3c;margin-bottom:8px;">最新告警</div>
-              <el-table :data="alarmData" border stripe size="small" style="width:100%;">
-                <el-table-column prop="time" label="时间" width="120" align="center" />
-                <el-table-column prop="type" label="类型" width="100" align="center" />
-                <el-table-column prop="desc" label="描述" align="center" />
-              </el-table>
-              <div v-if="alarmData.length === 0" style="text-align:center;color:#888;margin:12px 0;">暂无告警</div>
-            </el-card>
-          </el-col>
-        </el-row>
-      </el-card>
-    </el-col>
-  </el-row>
+  <div id="app" class="ai-chat-app">
+    <div class="chat-panel">
+      <div class="chat-header">
+        <span>AI对话助手</span>
+        <div>
+          <el-button v-if="!isLogin" type="primary" size="small" @click="goLogin">登录</el-button>
+          <el-button v-if="isLogin" type="danger" size="small" @click="logout">退出登录</el-button>
+        </div>
+      </div>
+      <div class="chat-messages" ref="msgList">
+        <div v-for="(msg, idx) in messages" :key="idx" :class="['chat-msg', msg.role]">
+          <span class="msg-role">{{ msg.role === 'user' ? '我' : 'AI' }}：</span>
+          <span class="msg-content">{{ msg.content }}</span>
+        </div>
+      </div>
+      <div v-if="!isLogin" class="login-tip">请先登录后使用对话和上传服务</div>
+      <div class="chat-input-area">
+        <el-upload
+          class="upload-btn"
+          :show-file-list="false"
+          :http-request="uploadFile"
+          :disabled="!isLogin"
+        >
+          <el-button size="small" :disabled="!isLogin">上传文件</el-button>
+        </el-upload>
+        <el-input
+          v-model="inputMsg"
+          placeholder="和我聊聊天吧"
+          class="chat-input"
+          :disabled="!isLogin"
+          @keyup.enter.native="sendMsg"
+        />
+        <el-button type="primary" @click="sendMsg" :disabled="!isLogin">发送</el-button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
-// import axios from 'axios'; // 后端接口接入时再启用
-import * as echarts from 'echarts';
-
+import { ref, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
+import { ElMessage } from 'element-plus';
+import axios from 'axios';
 export default {
-  name: 'TrafficHome',
-  data() {
-    return {
-      timer: null, // 定时器句柄-流量趋势
-      abnormalTimer: null, // 定时器句柄-异常趋势
-      alarmData: [
-        { time: '2024-06-01', type: 'DDoS', desc: '检测到大流量攻击' },
-        { time: '2024-06-02', type: '端口扫描', desc: '异常端口扫描行为' },
-        { time: '2024-06-03', type: '恶意登录', desc: '多次失败登录尝试' },
-      ],
+  name: 'Home',
+  setup() {
+    const router = useRouter();
+    const isLogin = ref(localStorage.getItem('isLogin') === '1');
+    // 聊天相关
+    const messages = ref([
+      { role: 'ai', content: '你好，有什么可以帮你？' }
+    ]);
+    const inputMsg = ref('');
+    const msgList = ref(null);
+    const uploadedFileIds = ref([]); // 存储已上传文件id
+    // 跳转登录页
+    const goLogin = () => {
+      router.push('/login');
     };
-  },
-  mounted() {
-    this.initChart();
-    this.initAbnormalChart();
-    this.timer = setInterval(this.initChart, 10000); // 每10秒刷新流量趋势
-    this.abnormalTimer = setInterval(this.initAbnormalChart, 10000); // 每10秒刷新异常趋势
-  },
-  beforeUnmount() {
-    clearInterval(this.timer);
-    clearInterval(this.abnormalTimer);
-  },
-  methods: {
-    // 初始化流量趋势图
-    async initChart() {
-      // 模拟接口请求
-      // const res = await axios.get('/api/traffic/trend');
-      // const data = res.data;
-      const data = {
-        x: ['周一','周二','周三','周四','周五','周六','周日'],
-        y: [120, 200, 150, 80, 70, 110, 130],
-      };
-      const chart = echarts.init(this.$refs.chart);
-      chart.setOption({
-        title: { text: '', left: 'center' },
-        tooltip: {},
-        xAxis: { type: 'category', data: data.x },
-        yAxis: { type: 'value' },
-        series: [{ name: '流量', type: 'line', data: data.y, smooth: true, lineStyle: { width: 3, color: '#3578e5' }, areaStyle: { color: '#e0eafc' } }],
-        grid: { left: 40, right: 20, top: 30, bottom: 30 },
+    // 退出登录
+    const logout = () => {
+      localStorage.removeItem('isLogin');
+      isLogin.value = false;
+      ElMessage.success('已退出登录');
+    };
+    // 发送消息
+    const sendMsg = async () => {
+      console.log('sendMsg called', isLogin.value, inputMsg.value);
+      if (!isLogin.value) return;
+      if (!inputMsg.value.trim()) return;
+      messages.value.push({ role: 'user', content: inputMsg.value });
+      const userMsg = inputMsg.value;
+      inputMsg.value = '';
+      scrollToBottom();
+      try {
+        const res = await axios.post('http://localhost:8000/api/llm/chat/', {
+          messages: messages.value,
+          file_ids: uploadedFileIds.value
+        });
+        messages.value.push({ role: 'ai', content: res.data.reply });
+        scrollToBottom();
+      } catch (e) {
+        messages.value.push({ role: 'ai', content: '大模型接口异常' });
+        scrollToBottom();
+      }
+    };
+    // 滚动到底部
+    const scrollToBottom = () => {
+      nextTick(() => {
+        if (msgList.value) {
+          msgList.value.scrollTop = msgList.value.scrollHeight;
+        }
       });
-    },
-    // 初始化异常趋势图
-    async initAbnormalChart() {
-      // 模拟异常趋势数据
-      const data = {
-        x: ['周一','周二','周三','周四','周五','周六','周日'],
-        y: [5, 8, 6, 2, 1, 4, 7],
-      };
-      const chart = echarts.init(this.$refs.abnormalChart);
-      chart.setOption({
-        title: { text: '', left: 'center' },
-        tooltip: {},
-        xAxis: { type: 'category', data: data.x },
-        yAxis: { type: 'value' },
-        series: [{ name: '异常', type: 'bar', data: data.y, itemStyle: { color: '#e67e22' } }],
-        grid: { left: 40, right: 20, top: 30, bottom: 30 },
-      });
-    },
-  },
+    };
+    // 文件上传
+    const uploadFile = async (option) => {
+      if (!isLogin.value) return;
+      const formData = new FormData();
+      formData.append('file', option.file);
+      try {
+        const res = await axios.post('http://localhost:8000/api/llm/upload/', formData);
+        uploadedFileIds.value.push(res.data.file_id);
+        ElMessage.success('文件上传成功: ' + option.file.name);
+        option.onSuccess && option.onSuccess({ file_id: res.data.file_id }, option.file);
+      } catch (e) {
+        ElMessage.error('文件上传失败');
+        option.onError && option.onError(e, option.file);
+      }
+    };
+    // 监听登录状态变化（如登录页登录后返回首页）
+    window.addEventListener('storage', () => {
+      isLogin.value = localStorage.getItem('isLogin') === '1';
+    });
+    return {
+      isLogin,
+      goLogin,
+      logout,
+      messages,
+      inputMsg,
+      sendMsg,
+      msgList,
+      uploadFile
+    };
+  }
 };
 </script>
 
 <style scoped>
-/* 首页卡片样式 */
-.home-card {
+.ai-chat-app {
+  min-height: 100vh;
+  background: #f6f8fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chat-panel {
   background: #fff;
   border-radius: 14px;
   box-shadow: 0 2px 12px rgba(53,120,229,0.08);
-  padding: 32px 28px 24px 28px;
-  margin: 0 auto;
-  max-width: 1200px;
+  max-width: 700px;
+  width: 96vw;
+  min-width: 320px;
+  min-height: 600px;
+  margin: 60px auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 20px 0;
+  box-sizing: border-box;
 }
-.home-title {
+@media (max-width: 600px) {
+  .chat-panel {
+    padding: 0 2px 8px 2px;
+    margin: 12px auto;
+    min-width: unset;
+    min-height: 70vh;
+  }
+  .chat-header, .chat-messages, .chat-input-area {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px 12px 32px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 22px;
   color: #3578e5;
-  font-size: 26px;
   font-weight: 600;
-  margin-bottom: 12px;
-  text-align: center;
 }
-.home-desc {
-  color: #666;
-  font-size: 16px;
-  margin-bottom: 24px;
-  text-align: center;
-}
-.stats-list {
-  margin-bottom: 16px;
-}
-.chart-area {
-  margin-top: 12px;
+.chat-messages {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 20px 32px 0 32px;
   background: #f8fafc;
-  border-radius: 10px;
-  padding: 18px 12px 8px 12px;
-  box-shadow: 0 1px 4px rgba(53,120,229,0.04);
+  font-size: 18px;
 }
-.alarm-card {
-  min-height: 400px;
-  margin-top: 0;
+.chat-msg {
+  margin-bottom: 14px;
+  display: flex;
+  align-items: flex-start;
+}
+.chat-msg.user .msg-role {
+  color: #3578e5;
+  font-weight: bold;
+}
+.chat-msg.ai .msg-role {
+  color: #e67e22;
+  font-weight: bold;
+}
+.msg-content {
+  margin-left: 6px;
+  word-break: break-all;
+}
+.chat-input-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 32px 0 32px;
+}
+.chat-input {
+  flex: 1 1 auto;
+}
+.upload-btn {
+  margin-right: 8px;
+}
+.login-tip {
+  color: #e67e22;
+  text-align: center;
+  margin: 8px 0 0 0;
+  font-size: 15px;
 }
 </style> 

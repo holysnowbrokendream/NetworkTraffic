@@ -1,21 +1,16 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import { createRouter, createWebHistory } from 'vue-router'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
-
-import TrafficHome from './components/Home.vue'
-import TrafficDetail from './components/Traffic.vue'
-import ModelAnalysis from './components/Model.vue'
+import Home from './components/Home.vue'
 import LoginPage from './components/Login.vue'
-import SettingsPage from './components/Settings.vue'
+import RegisterPage from './components/Register.vue'
+import { createRouter, createWebHistory } from 'vue-router'
+import 'element-plus/dist/index.css'
+import ElementPlus from 'element-plus'
 
 const routes = [
+  { path: '/', component: Home },
   { path: '/login', component: LoginPage },
-  { path: '/', component: TrafficHome },
-  { path: '/traffic', component: TrafficDetail },
-  { path: '/model', component: ModelAnalysis },
-  { path: '/settings', component: SettingsPage },
+  { path: '/register', component: RegisterPage }
 ]
 
 const router = createRouter({
@@ -23,16 +18,15 @@ const router = createRouter({
   routes,
 })
 
+// 路由守卫，未登录只能访问登录/注册页
 router.beforeEach((to, from, next) => {
-  const isLogin = localStorage.getItem('isLogin') === '1'
-  if (to.path !== '/login' && !isLogin) {
-    next('/login')
-  } else if (to.path === '/login' && isLogin) {
-    next('/')
+  const isLogin = localStorage.getItem('isLogin') === '1';
+  if ((to.path === '/login' || to.path === '/register') && isLogin) {
+    next('/');
   } else {
-    next()
+    next();
   }
-})
+});
 
 const app = createApp(App)
 app.use(router)

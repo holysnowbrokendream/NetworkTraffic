@@ -60,3 +60,26 @@ def login(request):
     else:
         # 只允许POST请求
         return JsonResponse({'status': 'fail', 'msg': '只支持POST请求'}, status=405)
+
+@csrf_exempt
+def llm_chat(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            messages = data.get('messages', [])
+            file_ids = data.get('file_ids', [])
+            user_msg = messages[-1]['content'] if messages else ''
+            if file_ids:
+                reply = f'模拟回复：你说的是"{user_msg}"，你已上传文件：{",".join(file_ids)}'
+            else:
+                reply = f'模拟回复：你说的是"{user_msg}"'
+            return JsonResponse({'reply': reply})
+        except Exception as e:
+            return JsonResponse({'reply': f'发生错误: {str(e)}'}, status=400)
+    return JsonResponse({'error': '仅支持POST'}, status=405)
+
+@csrf_exempt
+def llm_upload(request):
+    if request.method == 'POST':
+        return JsonResponse({'file_id': request.FILES['file'].name, 'msg': '上传成功'})
+    return JsonResponse({'error': '仅支持POST'}, status=405)
