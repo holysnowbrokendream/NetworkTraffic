@@ -25,7 +25,12 @@ SECRET_KEY = 'django-insecure-8z$af)c&5!4f$yb^gkco&v07exdajog1z8ioemkx932#p#di7*
 # 调试模式，生产环境请设为False
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost', '127.0.0.1', 
+]
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+]
 
 
 # Application definition
@@ -41,6 +46,7 @@ INSTALLED_APPS = [
     'userauth',  # 用户认证应用
     'corsheaders',  # 跨域支持
     'rest_framework',  # DRF支持
+    'modeltask',  # 模型任务应用
 ]
 
 # 中间件配置
@@ -85,8 +91,8 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'all_users',
-        'USER': 'root',
+        'NAME': 'NetworkTraffic',
+        'USER': 'nwt_user',
         'PASSWORD': '123456',
         'HOST': '127.0.0.1',
         'PORT': '3306',
@@ -148,3 +154,6 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

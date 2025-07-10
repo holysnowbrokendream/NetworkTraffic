@@ -7,6 +7,41 @@ import { createRouter, createWebHistory } from 'vue-router'
 import 'element-plus/dist/index.css'
 import ElementPlus from 'element-plus'
 
+// 添加全局样式来防止滚动
+const style = document.createElement('style')
+style.textContent = `
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100vh !important;
+    width: 100vw !important;
+    overflow: hidden !important;
+    background: #1a1a1a !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+  }
+  
+  * {
+    box-sizing: border-box;
+  }
+  
+  #app {
+    height: 100vh !important;
+    width: 100vw !important;
+    overflow: hidden !important;
+    background: #1a1a1a !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+  }
+`
+document.head.appendChild(style)
+
 const routes = [
   { path: '/', component: Home },
   { path: '/login', component: LoginPage },

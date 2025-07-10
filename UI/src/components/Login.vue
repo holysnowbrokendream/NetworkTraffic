@@ -44,6 +44,7 @@ export default {
         });
         if (res.data.status === 'success') {
           localStorage.setItem('isLogin', '1');
+          localStorage.setItem('token', res.data.token); // 保存token
           this.$router.replace('/');
         } else {
           this.error = res.data.msg || '登录失败';

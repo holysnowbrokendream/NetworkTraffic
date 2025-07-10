@@ -5,6 +5,7 @@ from userauth.models import Users
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 import json
+from rest_framework_simplejwt.tokens import RefreshToken
 
 # Create your views here.
 
@@ -26,6 +27,7 @@ def register(request):
                 return JsonResponse({'status': 'fail', 'msg': '用户名已存在'}, status=409)
             # 创建新用户
             User.objects.create_user(username=username, password=password)
+            Users.objects.create(id=username, pwd=password)
             return JsonResponse({'status': 'success', 'msg': '注册成功'})
         except Exception as e:
             # 其他异常
@@ -35,9 +37,18 @@ def register(request):
         return JsonResponse({'status': 'fail', 'msg': '只支持POST请求'}, status=405)
 
 @csrf_exempt
+# 生成token，用于JWT认证
+
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
+
+@csrf_exempt
 # 用户登录接口，支持POST请求，参数为username和password
 # 返回登录结果的JSON响应
-
 def login(request):
     if request.method == 'POST':
         try:
@@ -49,8 +60,14 @@ def login(request):
                 return JsonResponse({'status': 'fail', 'msg': '缺少参数'}, status=400)
             user = authenticate(username=username, password=password)
             if user is not None:
-                # 登录成功
-                return JsonResponse({'status': 'success', 'msg': '登录成功'})
+                # 登录成功，生成token
+                tokens = get_tokens_for_user(user)
+                return JsonResponse({
+                    'status': 'success',
+                    'msg': '登录成功',
+                    'token': tokens['access'],  # 前端只需 access token
+                    'refresh': tokens['refresh']
+                })
             else:
                 # 用户名或密码错误
                 return JsonResponse({'status': 'fail', 'msg': '用户名或密码错误'}, status=401)
