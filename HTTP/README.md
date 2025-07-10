@@ -92,20 +92,8 @@
 
 5. **修改 Django 配置文件**
 
-    打开 `backend/settings.py` 文件，找到如下内容，修改为你的 MySQL 用户名和密码：
-
-    ```python
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'your_database',     # 修改为自己的数据库名称
-            'USER': 'your_username',     # 修改为自己的用户名
-            'PASSWORD': 'your_password', # 修改为自己的密码
-            'HOST': 'localhost',
-            'PORT': '3306',
-        }
-    }
-    ```
+    仿照 `.env.example` 文件内容，同目录下创建 `.env` 文件，并修改为你的 MySQL 数据库相关设置
+    > 💡 tip: `.env` 文件中删除所有注释以及多余空格
 
 6. **执行数据库迁移**
 
