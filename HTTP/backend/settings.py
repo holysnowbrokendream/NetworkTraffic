@@ -156,5 +156,22 @@ REST_FRAMEWORK = {
     ),
 }
 
+# JWT配置
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),  # 访问令牌有效期24小时
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),   # 刷新令牌有效期7天
+    'ROTATE_REFRESH_TOKENS': True,                # 刷新令牌时生成新的刷新令牌
+    'BLACKLIST_AFTER_ROTATION': True,             # 旧刷新令牌加入黑名单
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+}
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

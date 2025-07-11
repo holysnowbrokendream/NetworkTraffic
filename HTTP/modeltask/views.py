@@ -38,7 +38,9 @@ class CreateTxtFileView(APIView):
         with open(abs_path, 'w', encoding='utf-8') as f:
             f.write(content)
         userfile = UserFile.objects.create(user=users_obj, filename=filename, file=rel_path)
-        return Response({'file_id': userfile.id, 'filename': filename, 'url': settings.MEDIA_URL + rel_path}, status=201)
+        # 构造完整的媒体文件URL
+        full_url = request.build_absolute_uri(settings.MEDIA_URL + rel_path)
+        return Response({'file_id': userfile.id, 'filename': filename, 'url': full_url}, status=201)
 
 class MultiUploadView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -58,7 +60,9 @@ class MultiUploadView(APIView):
                 for chunk in f.chunks():
                     dest.write(chunk)
             userfile = UserFile.objects.create(user=users_obj, filename=f.name, file=rel_path)
-            result.append({'file_id': userfile.id, 'filename': f.name, 'url': settings.MEDIA_URL + rel_path})
+            # 构造完整的媒体文件URL
+            full_url = request.build_absolute_uri(settings.MEDIA_URL + rel_path)
+            result.append({'file_id': userfile.id, 'filename': f.name, 'url': full_url})
         return Response({'files': result}, status=201)
 
 class ListUserFilesView(APIView):
@@ -69,7 +73,11 @@ class ListUserFilesView(APIView):
         except Users.DoesNotExist:
             return Response({'msg': '用户不存在'}, status=400)
         files = UserFile.objects.filter(user=users_obj).order_by('-created_at')
-        data = [{'file_id': f.id, 'filename': f.filename, 'url': settings.MEDIA_URL + str(f.file), 'created_at': f.created_at} for f in files]
+        data = []
+        for f in files:
+            # 构造完整的媒体文件URL
+            full_url = request.build_absolute_uri(settings.MEDIA_URL + str(f.file))
+            data.append({'file_id': f.id, 'filename': f.filename, 'url': full_url, 'created_at': f.created_at})
         return Response({'files': data})
 
 class DeleteUserFileView(APIView):

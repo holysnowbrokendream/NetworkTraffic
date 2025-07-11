@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from userauth import views as userauth_views
 
 # 项目主路由配置
@@ -26,3 +28,8 @@ urlpatterns = [
     path('', include('userauth.urls')),  # 用户认证相关接口
     path('api/modeltask/', include('modeltask.urls')),  # 模型任务相关接口
 ]
+
+# 在开发环境中提供媒体文件和静态文件服务
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
