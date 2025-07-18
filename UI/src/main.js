@@ -17,6 +17,54 @@ style.textContent = `
     --theme-transition: 0.4s ease;
     --ui-transition: 0.25s ease;
     
+    /* 亮色主题变量 - 默认使用白色主题 */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #e9ecef;
+    --bg-quaternary: #dee2e6;
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --text-accent: #007bff;
+    --text-danger: #dc3545;
+    --text-danger-hover: #c82333;
+    --text-warning: #fd7e14;
+    --border-color: #ced4da;
+    --hover-bg: rgba(0, 123, 255, 0.1);
+    --hover-bg-light: rgba(0, 123, 255, 0.05);
+    --shadow-color: rgba(0, 0, 0, 0.15);
+    --accent-color: #007bff;
+    --accent-hover: #0056b3;
+    --button-hover: #f8f9fa;
+    --accent-shadow: rgba(0, 123, 255, 0.25);
+    --accent-shadow-light: rgba(0, 123, 255, 0.1);
+    --accent-shadow-strong: rgba(0, 123, 255, 0.4);
+  }
+  
+  [data-theme="light"] {
+    /* 亮色主题变量 - 与默认主题保持一致 */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #e9ecef;
+    --bg-quaternary: #dee2e6;
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --text-accent: #007bff;
+    --text-danger: #dc3545;
+    --text-danger-hover: #c82333;
+    --text-warning: #fd7e14;
+    --border-color: #ced4da;
+    --hover-bg: rgba(0, 123, 255, 0.1);
+    --hover-bg-light: rgba(0, 123, 255, 0.05);
+    --shadow-color: rgba(0, 0, 0, 0.15);
+    --accent-color: #007bff;
+    --accent-hover: #0056b3;
+    --button-hover: #f8f9fa;
+    --accent-shadow: rgba(0, 123, 255, 0.25);
+    --accent-shadow-light: rgba(0, 123, 255, 0.1);
+    --accent-shadow-strong: rgba(0, 123, 255, 0.4);
+  }
+
+  [data-theme="dark"] {
     /* 暗色主题变量 */
     --bg-primary: #1a1a1a;
     --bg-secondary: #2d3748;
@@ -38,30 +86,6 @@ style.textContent = `
     --accent-shadow: rgba(129, 199, 132, 0.4);
     --accent-shadow-light: rgba(129, 199, 132, 0.2);
     --accent-shadow-strong: rgba(129, 199, 132, 0.6);
-  }
-  
-  [data-theme="light"] {
-    /* 亮色主题变量 - 温暖明亮的色彩方案 */
-    --bg-primary: #fefefe;
-    --bg-secondary: #f8f4f0;
-    --bg-tertiary: #f0e6d8;
-    --bg-quaternary: #e8d5c4;
-    --text-primary: #2d3748;
-    --text-secondary: #5a6c7d;
-    --text-accent: #d97706;
-    --text-danger: #dc2626;
-    --text-danger-hover: #ef4444;
-    --text-warning: #c53030;
-    --border-color: #e2d1c3;
-    --hover-bg: rgba(248, 244, 240, 0.8);
-    --hover-bg-light: rgba(240, 230, 216, 0.5);
-    --shadow-color: rgba(45, 55, 72, 0.12);
-    --accent-color: #d97706;
-    --accent-hover: #b45309;
-    --button-hover: #fef7ed;
-    --accent-shadow: rgba(217, 119, 6, 0.25);
-    --accent-shadow-light: rgba(217, 119, 6, 0.12);
-    --accent-shadow-strong: rgba(217, 119, 6, 0.4);
   }
 
   /* 全局主题过渡动画统一设置 */

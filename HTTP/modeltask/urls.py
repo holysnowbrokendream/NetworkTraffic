@@ -1,9 +1,9 @@
 from django.urls import path
-from .views import CreateTxtFileView, MultiUploadView, ListUserFilesView, DeleteUserFileView
+from .views import ModelAnalyzeView, ChatSessionListView, ChatSessionDetailView, ChatMessageCreateView
 
 urlpatterns = [
-    path('create_txt_file/', CreateTxtFileView.as_view()),
-    path('multi_upload/', MultiUploadView.as_view()),
-    path('list_user_files/', ListUserFilesView.as_view()),
-    path('delete_user_file/', DeleteUserFileView.as_view()),
+    path('analyze/', ModelAnalyzeView.as_view(), name='model-analyze'),
+    path('sessions/', ChatSessionListView.as_view(), name='chat-session-list'),
+    path('sessions/<int:pk>/', ChatSessionDetailView.as_view(), name='chat-session-detail'),
+    path('sessions/<int:session_id>/messages/', ChatMessageCreateView.as_view(), name='chat-message-create'),
 ] 

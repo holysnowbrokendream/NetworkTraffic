@@ -2,113 +2,69 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from django.http import FileResponse
-from django.conf import settings
-from .models import UserFile
-from userauth.models import Users
-import os, datetime
-from rest_framework.parsers import MultiPartParser, FormParser
+import tempfile
+from .model_tools import call_bert_model, call_rule_tool, call_gen_model
+from rest_framework import generics, permissions
+from .models import ChatSession, ChatMessage
+from .serializers import ChatSessionSerializer, ChatMessageSerializer
 
-# Create your views here.
-
-def get_current_custom_user(request):
+class ModelAnalyzeView(APIView):
     """
-    根据 request.user 查找自定义 Users 实例。
-    假设 Users.id == request.user.username
+    多模型推理接口：
+    type=bert（pcap->研判结果）、type=rule（pcap->规则）、type=gen（指令->pcap文件）
     """
-    try:
-        return Users.objects.get(id=request.user.username)
-    except Users.DoesNotExist:
-        return None
-
-class CreateTxtFileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    def post(self, request):
-        filename = request.data.get('filename')
-        if not filename:
-            filetype = request.data.get('filetype', 'pcap')
-            filename = 'pcap.txt' if filetype == 'pcap' else 'rules.txt'
-        content = request.data.get('content', '')  # 新增：文件内容
-        users_obj = get_current_custom_user(request)
-        if not users_obj:
-            return Response({'msg': '用户不存在'}, status=400)
-        rel_path = f'user_files/{users_obj.id}_{datetime.datetime.now().strftime("%Y%m%d%H%M%S")}_{filename}'
-        abs_path = os.path.join(settings.MEDIA_ROOT, rel_path)
-        os.makedirs(os.path.dirname(abs_path), exist_ok=True)
-        with open(abs_path, 'w', encoding='utf-8') as f:
-            f.write(content)
-        userfile = UserFile.objects.create(user=users_obj, filename=filename, file=rel_path)
-        # 构造完整的媒体文件URL
-        full_url = request.build_absolute_uri(settings.MEDIA_URL + rel_path)
-        return Response({'file_id': userfile.id, 'filename': filename, 'url': full_url}, status=201)
+    def post(self, request, *args, **kwargs):
+        tool_type = request.data.get('type')
+        if tool_type in ['bert', 'rule']:
+            uploaded_file = request.FILES.get('file')
+            if not uploaded_file:
+                return Response({"error": "缺少pcap文件"}, status=400)
+            with tempfile.NamedTemporaryFile(delete=True) as tmp:
+                for chunk in uploaded_file.chunks():
+                    tmp.write(chunk)
+                tmp.flush()
+                if tool_type == 'bert':
+                    result = call_bert_model(tmp.name)
+                else:
+                    result = call_rule_tool(tmp.name)
+            return Response(result, status=200)
+        elif tool_type == 'gen':
+            text = request.data.get('text')
+            if not text:
+                return Response({"error": "缺少指令文本"}, status=400)
+            pcap_content = call_gen_model(text)
+            response = Response(pcap_content, content_type='application/octet-stream')
+            response['Content-Disposition'] = 'attachment; filename="result.pcap"'
+            return response
+        else:
+            return Response({"error": "type参数错误"}, status=400)
 
-class MultiUploadView(APIView):
+class ChatSessionListView(generics.ListCreateAPIView):
+    serializer_class = ChatSessionSerializer
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
-    def post(self, request):
-        try:
-            users_obj = get_current_custom_user(request)
-        except Users.DoesNotExist:
-            return Response({'msg': '用户不存在'}, status=400)
-        files = request.FILES.getlist('file')
-        result = []
-        for f in files:
-            rel_path = f'user_files/{users_obj.id}_{datetime.datetime.now().strftime("%Y%m%d%H%M%S")}_{f.name}'
-            abs_path = os.path.join(settings.MEDIA_ROOT, rel_path)
-            os.makedirs(os.path.dirname(abs_path), exist_ok=True)
-            with open(abs_path, 'wb+') as dest:
-                for chunk in f.chunks():
-                    dest.write(chunk)
-            userfile = UserFile.objects.create(user=users_obj, filename=f.name, file=rel_path)
-            # 构造完整的媒体文件URL
-            full_url = request.build_absolute_uri(settings.MEDIA_URL + rel_path)
-            result.append({'file_id': userfile.id, 'filename': f.name, 'url': full_url})
-        return Response({'files': result}, status=201)
+    def get_queryset(self):
+        return ChatSession.objects.filter(user=self.request.user).order_by('-updated_at')
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
-class ListUserFilesView(APIView):
+class ChatSessionDetailView(generics.RetrieveUpdateAPIView):
+    serializer_class = ChatSessionSerializer
     permission_classes = [permissions.IsAuthenticated]
-    def get(self, request):
-        try:
-            users_obj = get_current_custom_user(request)
-        except Users.DoesNotExist:
-            return Response({'msg': '用户不存在'}, status=400)
-        files = UserFile.objects.filter(user=users_obj).order_by('-created_at')
-        data = []
-        for f in files:
-            # 构造完整的媒体文件URL
-            full_url = request.build_absolute_uri(settings.MEDIA_URL + str(f.file))
-            data.append({'file_id': f.id, 'filename': f.filename, 'url': full_url, 'created_at': f.created_at})
-        return Response({'files': data})
+    def get_queryset(self):
+        return ChatSession.objects.filter(user=self.request.user)
 
-class DeleteUserFileView(APIView):
+class ChatMessageCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    def post(self, request):
-        file_id = request.data.get('file_id')
-        try:
-            users_obj = get_current_custom_user(request)
-        except Users.DoesNotExist:
-            return Response({'msg': '用户不存在'}, status=400)
-        try:
-            userfile = UserFile.objects.get(id=file_id, user=users_obj)
-            file_path = userfile.file.path
-            userfile.delete()
-            if os.path.exists(file_path):
-                os.remove(file_path)
-            return Response({'msg': '删除成功'})
-        except UserFile.DoesNotExist:
-            return Response({'msg': '文件不存在'}, status=404)
+    def post(self, request, session_id):
+        session = ChatSession.objects.filter(id=session_id, user=request.user).first()
+        if not session:
+            return Response({'detail': '会话不存在'}, status=404)
+        serializer = ChatMessageSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(session=session)
+            session.updated_at = serializer.data['created_at']
+            session.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
 
-# 定期清理7天前的文件
-from django.utils import timezone
-from django_cron import CronJobBase, Schedule
-class CleanOldFilesCronJob(CronJobBase):
-    RUN_EVERY_MINS = 60 * 24  # 每天运行一次
-    schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
-    code = 'modeltask.clean_old_files'
-    def do(self):
-        week_ago = timezone.now() - datetime.timedelta(days=7)
-        old_files = UserFile.objects.filter(created_at__lt=week_ago)
-        for f in old_files:
-            if os.path.exists(f.file.path):
-                os.remove(f.file.path)
-            f.delete()
