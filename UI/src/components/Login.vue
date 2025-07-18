@@ -1,201 +1,79 @@
 <template>
-  <!-- 登录页面主容器 -->
   <div class="login-container">
     <el-card class="login-card">
-      <h2 class="login-title">用户登录</h2>
-      <p class="login-subtitle">网络流量分析系统</p>
-      
-      <!-- 登录表单 -->
+      <h2 class="login-title">登录</h2>
       <el-form :model="form" @submit.prevent="login" @keyup.enter="login">
         <el-form-item>
-          <el-input 
-            v-model="form.username" 
-            placeholder="用户名/邮箱/手机号" 
-            clearable 
-            prefix-icon="el-icon-user"
-            :disabled="loading"
-          />
+          <el-input v-model="form.username" placeholder="用户名" clearable prefix-icon="el-icon-user" />
         </el-form-item>
         <el-form-item>
-          <el-input 
-            v-model="form.password" 
-            type="password" 
-            placeholder="密码" 
-            clearable 
-            prefix-icon="el-icon-lock" 
-            show-password
-            :disabled="loading"
-          />
+          <el-input v-model="form.password" type="password" placeholder="密码" clearable prefix-icon="el-icon-lock" show-password />
         </el-form-item>
         <el-form-item>
-          <el-button 
-            type="primary" 
-            style="width:100%;" 
-            @click="login"
-            :loading="loading"
-            :disabled="!form.username || !form.password"
-          >
-            {{ loading ? '登录中...' : '登录' }}
-          </el-button>
+          <el-button type="primary" style="width:100%;" @click="login">登录</el-button>
         </el-form-item>
       </el-form>
-      
-      <!-- 注册入口 -->
       <div style="text-align:center;margin-top:8px;">
-        <el-button type="text" @click="showRegister=true">没有账号？注册</el-button>
+        <el-button type="text" @click="$router.push('/register')">没有账号？注册</el-button>
       </div>
-      
-      <!-- 登录错误提示 -->
       <div v-if="error" class="login-error">{{ error }}</div>
     </el-card>
-    
-    <!-- 注册弹窗 -->
-    <el-dialog v-model="showRegister" title="用户注册" width="400px" :close-on-click-modal="false">
-      <el-form :model="registerForm" label-width="80px">
-        <el-form-item label="用户名">
-          <el-input v-model="registerForm.username" placeholder="请输入用户名" />
-        </el-form-item>
-        <el-form-item label="邮箱">
-          <el-input v-model="registerForm.email" placeholder="请输入邮箱（选填）" />
-        </el-form-item>
-        <el-form-item label="手机号">
-          <el-input v-model="registerForm.phonenumber" placeholder="请输入手机号" />
-        </el-form-item>
-        <el-form-item label="密码">
-          <el-input v-model="registerForm.password" type="password" placeholder="请输入密码" />
-        </el-form-item>
-        <el-form-item label="用户类型">
-          <el-select v-model="registerForm.user_type" placeholder="请选择用户类型">
-            <el-option label="普通用户" value="user"></el-option>
-            <el-option label="管理员" value="admin"></el-option>
-            <el-option label="访客" value="guest"></el-option>
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="showRegister=false">取消</el-button>
-        <el-button type="primary" @click="register" :loading="registerLoading">
-          {{ registerLoading ? '注册中...' : '注册' }}
-        </el-button>
-      </template>
-      <div v-if="registerMsg" :style="{color: registerSuccess ? 'green' : 'red', textAlign: 'center', marginTop: '8px'}">
-        {{ registerMsg }}
-      </div>
-    </el-dialog>
   </div>
 </template>
 
 <script>
-import { apiService } from '../api/index.js';
-
+import axios from 'axios';
 export default {
   name: 'LoginPage',
   data() {
     return {
-      // 登录表单数据
       form: {
         username: '',
         password: ''
       },
-      error: '', // 登录错误提示
-      loading: false, // 登录加载状态
-      showRegister: false, // 注册弹窗显示状态
-      registerLoading: false, // 注册加载状态
-      // 注册表单数据
-      registerForm: {
-        username: '',
-        email: '',
-        phonenumber: '',
-        password: '',
-        user_type: 'user'
-      },
-      registerMsg: '', // 注册结果提示
-      registerSuccess: false // 注册成功状态
+      error: ''
     };
   },
+  mounted() {
+    // 初始化主题
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    } else {
+      // 默认为暗色主题
+      localStorage.setItem('theme', 'dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  },
+  mounted() {
+    // 初始化主题
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    } else {
+      // 默认为暗色主题
+      localStorage.setItem('theme', 'dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  },
   methods: {
-    // 登录方法，调用后端API
     async login() {
       this.error = '';
-      this.loading = true;
-      
       try {
-        const response = await apiService.login({
+        const res = await axios.post('http://localhost:8000/login/', {
           username: this.form.username,
           password: this.form.password
         });
-        
-        if (response.data.status === 'success') {
-          // 保存登录状态和用户信息
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
+        if (res.data.status === 'success') {
           localStorage.setItem('isLogin', '1');
-          
-          // 显示成功消息
-          this.$message.success(response.data.message);
-          
-          // 跳转到首页
-          setTimeout(() => {
-            this.$router.replace('/');
-          }, 1000);
+          localStorage.setItem('token', res.data.token); // 保存access token
+          localStorage.setItem('refreshToken', res.data.refresh); // 保存refresh token
+          this.$router.replace('/');
         } else {
-          this.error = response.data.message || '登录失败';
+          this.error = res.data.msg || '登录失败';
         }
-      } catch (error) {
-        if (error.response?.data?.message) {
-          this.error = error.response.data.message;
-        } else {
-          this.error = '登录失败，请检查网络连接';
-        }
-      } finally {
-        this.loading = false;
-      }
-    },
-    
-    // 注册方法，调用后端API
-    async register() {
-      this.registerMsg = '';
-      this.registerLoading = true;
-      
-      try {
-        const response = await apiService.register({
-          username: this.registerForm.username,
-          email: this.registerForm.email,
-          phonenumber: this.registerForm.phonenumber,
-          password: this.registerForm.password,
-          user_type: this.registerForm.user_type
-        });
-        
-        if (response.data.status === 'success') {
-          this.registerSuccess = true;
-          this.registerMsg = response.data.message;
-          
-          // 成功后清空表单并关闭弹窗
-          setTimeout(() => {
-            this.showRegister = false;
-            this.registerForm = {
-              username: '',
-              email: '',
-              phonenumber: '',
-              password: '',
-              user_type: 'user'
-            };
-            this.registerMsg = '';
-            this.registerSuccess = false;
-          }, 2000);
-        } else {
-          this.registerSuccess = false;
-          this.registerMsg = response.data.message || '注册失败';
-        }
-      } catch (error) {
-        this.registerSuccess = false;
-        if (error.response?.data?.message) {
-          this.registerMsg = error.response.data.message;
-        } else {
-          this.registerMsg = '注册失败，请检查网络连接';
-        }
-      } finally {
-        this.registerLoading = false;
+      } catch (e) {
+        this.error = '登录失败';
       }
     }
   },
@@ -203,51 +81,110 @@ export default {
 </script>
 
 <style scoped>
-/* 登录页面主容器样式 */
 .login-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--bg-primary);
   box-sizing: border-box;
   padding: 0 12px;
+  transition: background-color var(--theme-transition);
 }
-
-/* 登录卡片样式 */
 .login-card {
-  max-width: 400px;
+  max-width: 360px;
   width: 100%;
   margin: 0 auto;
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-  padding: 40px 35px 30px 35px;
+  border-radius: 16px;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  box-shadow: 0 12px 48px var(--shadow-color);
+  padding: 36px 32px 24px 32px;
   box-sizing: border-box;
+  transition: all var(--theme-transition);
 }
-
 .login-title {
   text-align: center;
-  color: #4CAF50;
+  color: var(--text-accent);
   font-weight: 600;
-  margin-bottom: 8px;
-  font-size: 2em;
+  margin-bottom: 24px;
+  font-size: 28px;
+  transition: color var(--theme-transition);
 }
-
-.login-subtitle {
-  text-align: center;
-  color: #666;
-  margin-bottom: 30px;
-  font-size: 1.1em;
-}
-
 .login-error {
-  color: #f44336;
-  margin-top: 12px;
-  font-size: 14px;
+  color: var(--text-danger);
+  margin-top: 8px;
+  font-size: 15px;
   text-align: center;
-  padding: 8px;
-  background: #fff5f5;
-  border-radius: 4px;
-  border: 1px solid #ffebee;
+  transition: color var(--theme-transition);
+}
+
+/* 主题适配的Element Plus组件样式覆盖 */
+.login-card :deep(.el-input__wrapper) {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--bg-quaternary) !important;
+  box-shadow: 0 0 0 1px var(--bg-quaternary) inset !important;
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
+}
+
+.login-card :deep(.el-input__inner) {
+  color: var(--text-primary) !important;
+  font-size: 16px !important;
+}
+
+.login-card :deep(.el-input__inner::placeholder) {
+  color: var(--text-secondary) !important;
+}
+
+.login-card :deep(.el-input__wrapper:hover) {
+  border-color: var(--text-accent) !important;
+  box-shadow: 0 0 0 1px var(--text-accent) inset !important;
+}
+
+.login-card :deep(.el-input__wrapper.is-focus) {
+  border-color: var(--text-accent) !important;
+  box-shadow: 0 0 0 1px var(--text-accent) inset !important;
+}
+
+.login-card :deep(.el-button--primary) {
+  background-color: var(--text-accent) !important;
+  border-color: var(--text-accent) !important;
+  color: var(--button-hover) !important;
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+  padding: 12px 24px !important;
+  font-size: 16px !important;
+  box-shadow: 0 4px 16px var(--accent-shadow) !important;
+  transition: all 0.25s ease !important;
+}
+
+.login-card :deep(.el-button--primary:hover) {
+  background-color: var(--accent-hover) !important;
+  border-color: var(--accent-hover) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px var(--accent-shadow-strong) !important;
+}
+
+.login-card :deep(.el-button--text) {
+  color: var(--text-accent) !important;
+  font-size: 15px !important;
+  transition: color 0.3s ease !important;
+}
+
+.login-card :deep(.el-button--text:hover) {
+  color: var(--accent-hover) !important;
+}
+
+.login-card :deep(.el-form-item) {
+  margin-bottom: 20px !important;
+}
+
+.login-card :deep(.el-input__prefix-inner) {
+  color: var(--text-secondary) !important;
+}
+
+.login-card :deep(.el-input__suffix-inner) {
+  color: var(--text-secondary) !important;
 }
 </style> 
