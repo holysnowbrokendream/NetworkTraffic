@@ -36,7 +36,11 @@
           <div class="welcome-title">网络流量研判大模型对话助手</div>
           <div class="welcome-subtitle">我可以帮你分析流量、提取规则、生成pcap文件，请输入你的问题或需求~</div>
         </div>
-        <div class="welcome-input-box">
+        <div v-if="!isLogin" class="welcome-login-section">
+          <div class="welcome-login-notice">请先登录后使用对话和推理服务</div>
+          <button class="welcome-login-btn" @click="goLogin">立即登录</button>
+        </div>
+        <div v-else class="welcome-input-box">
           <input v-model="welcomeInput" :maxlength="2000" @keydown.enter="handleWelcomeSend" placeholder="请输入你的问题..." />
           <button class="welcome-send-btn" :disabled="!welcomeInput.trim()" @click="handleWelcomeSend">发送</button>
         </div>
@@ -801,6 +805,172 @@ export default {
   bottom: 0;
   background: var(--bg-primary, #f7f8fa);
   z-index: 1;
+}
+
+.welcome-logo-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.welcome-logo {
+  margin-bottom: 24px;
+}
+
+.welcome-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary, #212529);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.welcome-subtitle {
+  font-size: 16px;
+  color: var(--text-secondary, #6c757d);
+  line-height: 1.5;
+  max-width: 500px;
+}
+
+.welcome-input-box {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.welcome-input-box input {
+  flex: 1;
+  height: 48px;
+  padding: 0 20px;
+  border: 2px solid var(--border-color, #ced4da);
+  border-radius: 24px;
+  font-size: 16px;
+  background: var(--bg-primary, #ffffff);
+  color: var(--text-primary, #212529);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.welcome-input-box input:focus {
+  outline: none;
+  border-color: var(--accent-color, #409eff);
+  box-shadow: 0 0 0 3px var(--accent-shadow-light, rgba(64, 158, 255, 0.1));
+}
+
+.welcome-input-box input::placeholder {
+  color: var(--text-secondary, #6c757d);
+}
+
+.welcome-send-btn {
+  height: 48px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 24px;
+  background: var(--accent-color, #409eff);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.welcome-send-btn:hover:not(:disabled) {
+  background: var(--accent-hover, #0056b3);
+  transform: translateY(-1px);
+}
+
+.welcome-send-btn:disabled {
+  background: var(--bg-tertiary, #e9ecef);
+  color: var(--text-secondary, #6c757d);
+  cursor: not-allowed;
+}
+
+/* 暗色主题下的欢迎页样式 */
+[data-theme='dark'] .welcome-title {
+  color: var(--text-primary, #e2e8f0);
+}
+
+[data-theme='dark'] .welcome-subtitle {
+  color: var(--text-secondary, #a0aec0);
+}
+
+[data-theme='dark'] .welcome-input-box input {
+  background: var(--bg-secondary, #2d3748);
+  border-color: var(--border-color, #4a5568);
+  color: var(--text-primary, #e2e8f0);
+}
+
+[data-theme='dark'] .welcome-input-box input:focus {
+  border-color: var(--accent-color, #81c784);
+  box-shadow: 0 0 0 3px var(--accent-shadow-light, rgba(129, 199, 132, 0.1));
+}
+
+[data-theme='dark'] .welcome-input-box input::placeholder {
+  color: var(--text-secondary, #a0aec0);
+}
+
+[data-theme='dark'] .welcome-send-btn {
+  background: var(--accent-color, #81c784);
+}
+
+[data-theme='dark'] .welcome-send-btn:hover:not(:disabled) {
+  background: var(--accent-hover, #68d391);
+}
+
+[data-theme='dark'] .welcome-send-btn:disabled {
+  background: var(--bg-tertiary, #4a5568);
+  color: var(--text-secondary, #a0aec0);
+}
+
+/* 欢迎页登录区域样式 */
+.welcome-login-section {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.welcome-login-notice {
+  font-size: 16px;
+  color: var(--text-secondary, #6c757d);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.welcome-login-btn {
+  height: 48px;
+  padding: 0 32px;
+  border: none;
+  border-radius: 24px;
+  background: var(--accent-color, #409eff);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.welcome-login-btn:hover {
+  background: var(--accent-hover, #0056b3);
+  transform: translateY(-1px);
+}
+
+/* 暗色主题下的登录区域样式 */
+[data-theme='dark'] .welcome-login-notice {
+  color: var(--text-secondary, #a0aec0);
+}
+
+[data-theme='dark'] .welcome-login-btn {
+  background: var(--accent-color, #81c784);
+}
+
+[data-theme='dark'] .welcome-login-btn:hover {
+  background: var(--accent-hover, #68d391);
 }
 
 /* 输入框样式 */
