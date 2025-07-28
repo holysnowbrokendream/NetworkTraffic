@@ -8,6 +8,10 @@ from .models import UserFile
 from userauth.models import Users
 import os, datetime
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from .models import UserSession
+from userauth.models import Users
 
 # Create your views here.
 
@@ -112,3 +116,106 @@ class CleanOldFilesCronJob(CronJobBase):
             if os.path.exists(f.file.path):
                 os.remove(f.file.path)
             f.delete()
+
+def get_current_custom_user(request):
+    try:
+        return Users.objects.get(id=request.user.username)
+    except Users.DoesNotExist:
+        return None
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def save_session(request):
+    """
+    保存/新建历史会话
+    POST参数: name(可选), messages(必需,数组), session_id(可选,存在则更新)
+    """
+    user = get_current_custom_user(request)
+    if not user:
+        return Response({'msg': '用户不存在'}, status=400)
+    messages = request.data.get('messages')
+    if not isinstance(messages, list):
+        return Response({'msg': '消息内容格式错误'}, status=400)
+    name = request.data.get('name', '新会话')
+    session_id = request.data.get('session_id')
+    if session_id:
+        try:
+            session = UserSession.objects.get(id=session_id, user=user)
+            session.name = name
+            session.messages = messages
+            session.save()
+            return Response({'msg': '会话已更新', 'session_id': session.id})
+        except UserSession.DoesNotExist:
+            return Response({'msg': '会话不存在'}, status=404)
+    else:
+        session = UserSession.objects.create(user=user, name=name, messages=messages)
+        return Response({'msg': '会话已保存', 'session_id': session.id})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_sessions(request):
+    """
+    获取用户历史会话列表，按新到旧
+    """
+    user = get_current_custom_user(request)
+    if not user:
+        return Response({'msg': '用户不存在'}, status=400)
+    sessions = UserSession.objects.filter(user=user).order_by('-updated_at')
+    data = [
+        {'session_id': s.id, 'name': s.name, 'created_at': s.created_at, 'updated_at': s.updated_at}
+        for s in sessions
+    ]
+    return Response({'sessions': data})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_session(request, session_id):
+    """
+    获取单个会话详情
+    """
+    user = get_current_custom_user(request)
+    if not user:
+        return Response({'msg': '用户不存在'}, status=400)
+    try:
+        session = UserSession.objects.get(id=session_id, user=user)
+        return Response({'session_id': session.id, 'name': session.name, 'messages': session.messages, 'created_at': session.created_at, 'updated_at': session.updated_at})
+    except UserSession.DoesNotExist:
+        return Response({'msg': '会话不存在'}, status=404)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def delete_session(request):
+    """
+    删除会话，POST参数: session_id
+    """
+    user = get_current_custom_user(request)
+    if not user:
+        return Response({'msg': '用户不存在'}, status=400)
+    session_id = request.data.get('session_id')
+    try:
+        session = UserSession.objects.get(id=session_id, user=user)
+        session.delete()
+        return Response({'msg': '会话已删除'})
+    except UserSession.DoesNotExist:
+        return Response({'msg': '会话不存在'}, status=404)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def rename_session(request):
+    """
+    重命名会话，POST参数: session_id, name
+    """
+    user = get_current_custom_user(request)
+    if not user:
+        return Response({'msg': '用户不存在'}, status=400)
+    session_id = request.data.get('session_id')
+    name = request.data.get('name')
+    if not name:
+        return Response({'msg': '新会话名不能为空'}, status=400)
+    try:
+        session = UserSession.objects.get(id=session_id, user=user)
+        session.name = name
+        session.save()
+        return Response({'msg': '会话已重命名'})
+    except UserSession.DoesNotExist:
+        return Response({'msg': '会话不存在'}, status=404)

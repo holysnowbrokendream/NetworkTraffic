@@ -25,7 +25,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),  # Django后台管理
     path('api/llm/chat/', userauth_views.llm_chat),
     path('api/llm/upload/', userauth_views.llm_upload),
-    path('', include('userauth.urls')),  # 用户认证相关接口
+    path('api/userauth/', include('userauth.urls')),  # 用户认证相关接口
     path('api/modeltask/', include('modeltask.urls')),  # 模型任务相关接口
 ]
 

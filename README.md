@@ -40,7 +40,7 @@ npm run dev     # 启动开发服务器
 ## HTTP 模块（后端）
 
 - **技术栈**：Python + Django + DRF（Django REST Framework）  
-- **数据库支持**：MySQL（通过 `mysqlclient` 连接）
+- **数据库支持**：SQLite（Django内置数据库）
 
 ### ▶️ 启动服务
 ```bash

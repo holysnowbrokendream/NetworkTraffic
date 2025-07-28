@@ -6,8 +6,8 @@ dependencies:
   - python=3.13.5
   - pip
   - django=5.2
-  - mysqlclient=2.2.7
-  - openssl=3.5.1
+  # mysqlclient=2.2.7  # 已移除MySQL依赖，使用SQLite
+  # openssl=3.5.1      # 已移除MySQL依赖，使用SQLite
   - ca-certificates
   - tzdata
   - pip:

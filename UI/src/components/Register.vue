@@ -50,7 +50,7 @@ export default {
     async register() {
       this.msg = '';
       try {
-        const res = await axios.post('http://localhost:8000/register/', {
+        const res = await axios.post('http://localhost:8000/api/userauth/register/', {
           username: this.form.username,
           password: this.form.password
         });

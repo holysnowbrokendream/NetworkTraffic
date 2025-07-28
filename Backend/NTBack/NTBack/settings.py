@@ -119,27 +119,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'NTBack.wsgi.application'
 
 ### 数据库配置
-# 项目计划使用MYSQL数据库，若要进行更改，请参考：
+# 项目使用SQLite数据库，这是Django内置的轻量级数据库
+# 如需使用其他数据库，请参考：
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-# 例如：
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'your-database-name',
-#         'USER': 'your-database-user',
-#         'PASSWORD': 'your-database-password',
-#         'HOST': 'your-database-host',
-#         'PORT': 'your-database-port',
-#     }
-# }
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'NetworkTraffic',
-        'USER': 'nwt_user',
-        'PASSWORD': '123456',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

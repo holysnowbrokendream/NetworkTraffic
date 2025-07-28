@@ -31,7 +31,7 @@
     python manage.py migrate
     ```
 
-4. **启动 Django 开发服务器**
+3. **启动 Django 开发服务器**
     ```bash
     python manage.py runserver
     ```
@@ -40,66 +40,20 @@
 
 ---
 
-## 数据库配置指南（MySQL）
+## 数据库配置说明
 
-本项目使用 MySQL 作为默认数据库，请按照以下步骤完成配置。
+本项目使用 **SQLite** 作为默认数据库，这是Django内置的轻量级数据库，无需额外配置。
 
-1. **安装 MySQL**
+### 优势：
+- ✅ 无需安装额外数据库服务
+- ✅ 零配置，开箱即用
+- ✅ 数据存储在 `db.sqlite3` 文件中
+- ✅ 适合开发和测试环境
 
-    确保你已安装并启动了 MySQL 服务。
-
-2. **登录 MySQL**
-
-    ```bash
-    mysql -u your_username -p
-    ```
-
-    💡 提示：如果你需要创建新用户，请使用如下语句：
-
-    ```sql
-    CREATE USER 'your_username'@'localhost' IDENTIFIED BY 'your_password';
-    ```
-
-    并为其授予数据库权限：
-
-    ```sql
-    GRANT ALL PRIVILEGES ON your_database.* TO 'your_username'@'localhost';
-    FLUSH PRIVILEGES;
-    ```
-
-3. **创建数据库**
-
-    ```sql
-    CREATE DATABASE your_database
-    CHARACTER SET utf8mb4
-    COLLATE utf8mb4_unicode_ci;
-    ```
-
-4. **检查用户认证插件（错误排查）**
-
-    运行以下 SQL 查询当前用户的认证方式：
-
-    ```sql
-    SELECT user, host, plugin FROM mysql.user WHERE user='your_username';
-    ```
-
-    如果返回的 `plugin` 是 `caching_sha2_password`，而 Django 报错连接失败，请改为兼容模式：
-
-    ```sql
-    ALTER USER 'your_username'@'localhost' IDENTIFIED WITH mysql_native_password BY 'your_password';
-    FLUSH PRIVILEGES;
-    ```
-
-5. **修改 Django 配置文件**
-
-    仿照 `.env.example` 文件内容，同目录下创建 `.env` 文件，并修改为你的 MySQL 数据库相关设置
-    > 💡 tip: `.env` 文件中删除所有注释以及多余空格
-
-6. **执行数据库迁移**
-
-    ```bash
-    python manage.py migrate
-    ```
+### 数据库文件位置：
+```
+HTTP/db.sqlite3
+```
 
 ---
 
@@ -117,9 +71,9 @@ python manage.py runserver
 
 | 问题 | 解决方案 |
 |------|----------|
-| `Access denied for user` | 检查用户名、密码是否正确，确认权限是否授予 |
-| `Authentication plugin 'caching_sha2_password' cannot be loaded` | 使用 `ALTER USER ... IDENTIFIED WITH mysql_native_password` 更换认证方式 |
-| `Database does not exist` | 确保已执行 `CREATE DATABASE` 并且名称一致 |
+| `no such table` | 执行 `python manage.py migrate` 创建数据库表 |
+| `database is locked` | 确保没有其他进程正在使用数据库文件 |
+| `permission denied` | 检查数据库文件权限，确保可读写 |
 
 ---
 

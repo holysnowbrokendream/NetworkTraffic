@@ -53,7 +53,7 @@ Backend/
 
 ### NTBack/settings.py
 - 项目配置中心，包含所有Django设置
-- 数据库配置: 使用MySQL数据库（可切换为SQLite测试）
+- 数据库配置: 使用SQLite数据库（Django内置数据库）
 - 安全设置: SECRET_KEY、DEBUG模式、ALLOWED_HOSTS
 - 国际化: 支持多语言，默认英文
 - 静态文件: CSS、JS、图片等静态资源

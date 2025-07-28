@@ -60,7 +60,7 @@ export default {
     async login() {
       this.error = '';
       try {
-        const res = await axios.post('http://localhost:8000/login/', {
+        const res = await axios.post('http://localhost:8000/api/userauth/login/', {
           username: this.form.username,
           password: this.form.password
         });

@@ -6,7 +6,7 @@ djangorestframework-simplejwt==5.3.0
 
 ### 可能需要的驱动
 
-# MySQL数据库驱动
+# 数据库驱动（已移除MySQL依赖，使用SQLite）
 # mysqlclient
 # Redis缓存
 # redis

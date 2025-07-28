@@ -1,19 +1,32 @@
 <template>
   <div id="app" class="ai-chat-app app-root">
     <!-- 侧边栏 - 始终显示 -->
-    <div class="sidebar-container" :class="{ 'sidebar-expanded': sidePanelExpanded }">
+    <div class="sidebar-container" :class="{ 'sidebar-expanded': sidePanelExpanded || sessionPanelExpanded }">
       <div class="blue-bar">
-        <!-- 顶部展开按钮 -->
+        <!-- 顶部展开按钮（历史文件按钮） -->
         <div class="top-section">
+          <!-- 历史文件按钮 -->
           <button 
             class="expand-btn" 
-            @click="toggleSidePanel"
+            :class="{ active: sidePanelExpanded }"
+            @click="() => { sidePanelExpanded = !sidePanelExpanded; if(sidePanelExpanded) { sessionPanelExpanded = false; } }"
             :title="!sidePanelExpanded ? '展开历史文件' : '收起历史文件'"
           >
             <el-icon>
               <el-icon-arrow-right v-if="!sidePanelExpanded" />
               <el-icon-arrow-left v-if="sidePanelExpanded" />
             </el-icon>
+          </button>
+          <!-- 历史会话按钮 -->
+          <button
+            class="expand-btn"
+            :class="{ active: sessionPanelExpanded }"
+            @click="() => { sessionPanelExpanded = !sessionPanelExpanded; if(sessionPanelExpanded) { sidePanelExpanded = false; fetchUserSessions(); } }"
+            :title="!sessionPanelExpanded ? '展开历史会话' : '收起历史会话'"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M12 3C7.03 3 3 7.03 3 12s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm-1-13h2v6l5.25 3.15-1 1.7L11 13V6z"/>
+            </svg>
           </button>
         </div>
         
@@ -81,19 +94,19 @@
             <template v-else>
               <el-button 
                 size="small" 
-                @click="cancelBatchDownload" 
-                class="batch-cancel-btn"
-                type="info"
-              >
-                取消
-              </el-button>
-              <el-button 
-                size="small" 
                 @click="toggleBatchDownload" 
                 class="batch-confirm-btn"
                 type="success"
               >
                 确认
+              </el-button>
+              <el-button 
+                size="small" 
+                @click="cancelBatchDownload" 
+                class="batch-cancel-btn"
+                type="info"
+              >
+                取消
               </el-button>
             </template>
           </div>
@@ -131,11 +144,54 @@
           </div>
         </div>
       </div>
+      <!-- 展开的历史会话面板（互斥显示） -->
+      <div
+        class="history-panel"
+        :class="{ expanded: sessionPanelExpanded }"
+        v-if="sessionPanelExpanded"
+        style="left: 80px; top: 0; z-index: 999;"
+      >
+        <div class="history-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3>历史会话</h3>
+          <div class="batch-download-buttons">
+            <el-button size="small" type="primary" class="batch-download-btn" @click="createNewSession">新的对话</el-button>
+          </div>
+        </div>
+        <div class="history-content">
+          <div class="file-list">
+            <div
+              v-for="session in userSessions"
+              :key="session.session_id"
+              class="file-item"
+              :class="{ selected: selectedSessionId === session.session_id }"
+              @click="loadSession(session)"
+              style="cursor:pointer;"
+            >
+              <template v-if="sessionRenameEditing === session.session_id">
+                <el-input
+                  v-model="sessionRenameInput"
+                  size="small"
+                  class="session-rename-input"
+                  style="width:120px;"
+                  @keyup.enter="confirmRenameSession(session)"
+                  @blur="cancelRenameSession"
+                />
+                <el-button size="mini" type="info" class="batch-cancel-btn" circle @mousedown.prevent @click="onRenameConfirmClick(session)">✔</el-button>
+              </template>
+              <template v-else>
+                <span class="session-name" style="flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ session.name }}</span>
+                <el-button size="mini" type="info" class="batch-cancel-btn" circle @click.stop="startRenameSession(session)" title="重命名">✎</el-button>
+                <el-button size="mini" type="danger" class="delete-btn" circle @click.stop="deleteSession(session.session_id)" title="删除">×</el-button>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- 主内容区域 -->
+    <!-- 主内容区域自适应居中 -->
     <div class="main-content" :class="{ 
-      'sidebar-expanded': sidePanelExpanded,
+      'sidebar-expanded': sidePanelExpanded || sessionPanelExpanded,
       'welcome-mode': isWelcomeMode,
       'chat-mode': !isWelcomeMode 
     }">
@@ -442,6 +498,7 @@ export default {
     const sidePanelExpanded = ref(false);
     const batchDownloadMode = ref(false); // 批量下载模式
     const selectedFiles = ref([]); // 选中的文件列表
+    const sessionPanelExpanded = ref(false); // 历史会话栏展开状态
     
     // 主题切换功能
     const isDarkMode = ref(localStorage.getItem('theme') !== 'light');
@@ -768,6 +825,8 @@ export default {
         customFileName.value = '';
         mode.value = 'chat';
       }
+      await saveCurrentSession(undefined, messages.value);
+      fetchUserSessions();
     };
     // 文件上传（多文件），上传后暂存到 pendingFiles
     const uploadFile = async (option) => {
@@ -1046,8 +1105,110 @@ export default {
     onMounted(() => {
       initTheme(); // 初始化主题
       fetchUserFiles();
+      fetchUserSessions();
       scrollToBottom(); // 页面加载时滚动到最新消息
     });
+    // 历史会话相关变量
+    const userSessions = ref([]);
+    const selectedSessionId = ref(null);
+    const sessionRenameInput = ref('');
+    const sessionRenameEditing = ref(null);
+    // 历史会话相关方法
+    const fetchUserSessions = async () => {
+      try {
+        const res = await axios.get('http://localhost:8000/api/modeltask/list_sessions/', {
+          headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
+        });
+        userSessions.value = res.data.sessions || [];
+      } catch (e) {
+        userSessions.value = [];
+      }
+    };
+    const loadSession = async (session) => {
+      try {
+        const res = await axios.get(`http://localhost:8000/api/modeltask/get_session/${session.session_id}/`, {
+          headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
+        });
+        messages.value = res.data.messages || [];
+        selectedSessionId.value = session.session_id;
+        isWelcomeMode.value = false;
+      } catch (e) {}
+    };
+    const deleteSession = async (session_id) => {
+      try {
+        await axios.post('http://localhost:8000/api/modeltask/delete_session/', { session_id }, {
+          headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
+        });
+        fetchUserSessions();
+        if (selectedSessionId.value === session_id) {
+          messages.value = [{ role: 'ai', content: '你好，有什么可以帮你？' }];
+          selectedSessionId.value = null;
+          isWelcomeMode.value = true;
+        }
+      } catch (e) {}
+    };
+    const startRenameSession = (session) => {
+      sessionRenameEditing.value = session.session_id;
+      sessionRenameInput.value = session.name;
+    };
+    const confirmRenameSession = async (session) => {
+      try {
+        await axios.post('http://localhost:8000/api/modeltask/rename_session/', {
+          session_id: session.session_id,
+          name: sessionRenameInput.value
+        }, {
+          headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
+        });
+        sessionRenameEditing.value = null;
+        // 本地同步更新
+        const s = userSessions.value.find(s => s.session_id === session.session_id);
+        if (s) s.name = sessionRenameInput.value;
+        fetchUserSessions();
+      } catch (e) {}
+    };
+    const cancelRenameSession = () => {
+      sessionRenameEditing.value = null;
+      sessionRenameInput.value = '';
+    };
+    const isSessionEmpty = () => {
+      // 仅有AI欢迎语，且无用户消息
+      return messages.value.length === 1 && messages.value[0].role === 'ai' && (!messages.value[0].content || messages.value[0].content === '你好，有什么可以帮你？');
+    };
+    const createNewSession = async () => {
+      // 如果当前会话非空才保存
+      if (!isSessionEmpty()) {
+        await saveCurrentSession(undefined, messages.value);
+        fetchUserSessions();
+      }
+      // 切换到新空会话
+      messages.value = [{ role: 'ai', content: '你好，有什么可以帮你？' }];
+      selectedSessionId.value = null;
+      isWelcomeMode.value = true;
+    };
+    const saveCurrentSession = async (name, msgs) => {
+      try {
+        // 优先用当前选中会话的名称
+        let sessionName = name;
+        if (!sessionName && selectedSessionId.value) {
+          const session = userSessions.value.find(s => s.session_id === selectedSessionId.value);
+          if (session) sessionName = session.name;
+        }
+        const res = await axios.post('http://localhost:8000/api/modeltask/save_session/', {
+          name: sessionName || '新会话',
+          messages: msgs || messages.value,
+          session_id: selectedSessionId.value || undefined
+        }, {
+          headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
+        });
+        if (res.data.session_id) {
+          selectedSessionId.value = res.data.session_id;
+        }
+      } catch (e) {}
+    };
+    const onRenameConfirmClick = async (session) => {
+      await confirmRenameSession(session);
+      cancelRenameSession();
+    };
     return {
       isLogin,
       isWelcomeMode, // 新增：导出欢迎模式状态
@@ -1076,6 +1237,7 @@ export default {
       customFileName,
       cancelMode,
       sidePanelExpanded,
+      sessionPanelExpanded,
       toggleSidePanel,
       batchDownloadMode,
       selectedFiles,
@@ -1101,7 +1263,21 @@ export default {
       leave,
       beforeEnter,
       enter,
-      afterEnter
+      afterEnter,
+      userSessions,
+      selectedSessionId,
+      sessionRenameInput,
+      sessionRenameEditing,
+      fetchUserSessions,
+      loadSession,
+      deleteSession,
+      startRenameSession,
+      confirmRenameSession,
+      cancelRenameSession,
+      createNewSession,
+      saveCurrentSession,
+      onRenameConfirmClick,
+      isSessionEmpty
     };
   }
 };
@@ -1193,6 +1369,7 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 30px;
 }
 
 .bottom-section {
@@ -1220,24 +1397,11 @@ html, body {
   transform: scale(1.05);
   background: var(--bg-quaternary);
 }
-.sidebar-container.sidebar-expanded .expand-btn {
-  background: var(--bg-secondary);
-  border: 1px solid var(--bg-tertiary);
+.expand-btn.active {
+  background: var(--bg-quaternary);
   color: var(--text-accent);
   box-shadow: 0 12px 40px var(--accent-shadow);
-}
-
-[data-theme="light"] .sidebar-container.sidebar-expanded .expand-btn {
-  box-shadow: 0 12px 40px var(--accent-shadow);
-}
-
-/* 亮色主题下的展开按钮边框 */
-[data-theme="light"] .expand-btn {
-  border: 3px solid var(--border-color) !important;
-}
-
-[data-theme="light"] .expand-btn:hover {
-  border-color: var(--text-accent) !important;
+  border: 2px solid var(--text-accent);
 }
 
 /* 登录按钮样式 */
@@ -1376,26 +1540,25 @@ html, body {
 
 .batch-download-buttons {
   position: absolute;
-  left: 200px;
+  right: 45px;
   top: 0;
   display: flex;
+  flex-direction: row;
   align-items: center;
+  gap: 8px;
 }
 
 .batch-download-buttons .batch-download-btn {
   position: relative;
 }
 
-.batch-download-buttons .batch-cancel-btn {
-  position: absolute;
-  right: calc(100% + 4px);
-  top: 0;
-}
-
+.batch-download-buttons .batch-cancel-btn,
 .batch-download-buttons .batch-confirm-btn {
-  position: absolute;
-  left: 0;
-  top: 0;
+  position: static;
+  left: unset;
+  right: unset;
+  top: unset;
+  margin: 0;
 }
 .history-header h3 {
   font-size: 18px;
@@ -1448,71 +1611,48 @@ html, body {
   border-color: var(--accent-hover) !important;
 }
 
-.batch-cancel-btn {
-  background-color: var(--bg-secondary) !important;
-  border-color: var(--bg-quaternary) !important;
-  color: var(--text-secondary) !important;
-  border-radius: 8px !important;
+.batch-cancel-btn,
+.batch-confirm-btn {
   padding: 6px 12px !important;
   font-size: 14px !important;
   font-weight: 600 !important;
-  transition: all 0.25s ease !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   box-shadow: 0 2px 8px var(--shadow-color) !important;
-}
-
-.batch-cancel-btn:hover {
-  background-color: var(--bg-quaternary) !important;
-  border-color: var(--bg-quaternary) !important;
-  color: #ffffff !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px var(--shadow-color) !important;
-}
-
-[data-theme="light"] .batch-cancel-btn:hover {
-  box-shadow: 0 4px 12px var(--shadow-color) !important;
-}
-
-/* 亮色主题下的批量取消按钮边框 */
-[data-theme="light"] .batch-cancel-btn {
-  border: 3px solid var(--border-color) !important;
-}
-
-[data-theme="light"] .batch-cancel-btn:hover {
-  border-color: var(--text-accent) !important;
+  transition: all 0.25s ease !important;
+  border-width: 1.5px !important;
 }
 
 .batch-confirm-btn {
   background-color: var(--text-accent) !important;
   border-color: var(--text-accent) !important;
-  color: #ffffff !important;
-  border-radius: 8px !important;
-  padding: 6px 12px !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  transition: all 0.25s ease !important;
-  box-shadow: 0 2px 8px var(--shadow-color) !important;
+  color: #fff !important;
+}
+
+.batch-cancel-btn:hover {
+  background-color: var(--bg-quaternary) !important;
+  border-color: var(--text-accent) !important;
+  color: var(--text-accent) !important;
 }
 
 .batch-confirm-btn:hover {
   background-color: var(--accent-hover) !important;
   border-color: var(--accent-hover) !important;
-  color: #ffffff !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px var(--accent-shadow) !important;
+  color: #fff !important;
 }
 
-[data-theme="light"] .batch-confirm-btn:hover {
-  box-shadow: 0 4px 12px var(--accent-shadow) !important;
+[data-theme="light"] .batch-cancel-btn {
+  border-width: 1.5px !important;
+  border-color: var(--border-color) !important;
 }
 
-/* 亮色主题下的批量确认按钮边框 */
-[data-theme="light"] .batch-confirm-btn {
-  border: 3px solid var(--text-accent) !important;
+[data-theme="light"] .batch-cancel-btn:hover {
+  border-color: var(--text-accent) !important;
+  color: var(--text-accent) !important;
 }
 
-[data-theme="light"] .batch-confirm-btn:hover {
-  border-color: var(--accent-hover) !important;
-}
 .history-content {
   flex: 1;
   overflow-y: auto;
@@ -3109,5 +3249,35 @@ body.animating {
     padding: 10px 20px;
     height: 60px;
   }
+}
+
+.session-name {
+  color: var(--text-primary) !important;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: color 0.3s;
+}
+
+.session-rename-input .el-input__wrapper {
+  background: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 0 0 1px var(--border-color) inset !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+}
+.session-rename-input .el-input__inner {
+  color: var(--text-primary) !important;
+  background: transparent !important;
+  font-size: 15px !important;
+}
+.session-rename-input .el-input__inner::placeholder {
+  color: var(--text-secondary) !important;
+}
+.session-rename-input .el-input__wrapper:hover,
+.session-rename-input .el-input__wrapper.is-focus {
+  border-color: var(--text-accent) !important;
+  box-shadow: 0 0 0 1px var(--text-accent) inset !important;
 }
 </style> 

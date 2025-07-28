@@ -16,19 +16,38 @@ from rest_framework_simplejwt.tokens import RefreshToken
 def register(request):
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)  # 解析请求体中的JSON数据
+            # 处理不同的Content-Type
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+            else:
+                data = request.POST
+            
             username = data.get('username')
             password = data.get('password')
+            
             if not username or not password:
                 # 缺少参数
                 return JsonResponse({'status': 'fail', 'msg': '缺少参数'}, status=400)
+            
+            # 验证用户名长度
+            if len(username) < 3:
+                return JsonResponse({'status': 'fail', 'msg': '用户名至少3个字符'}, status=400)
+            
+            # 验证密码长度
+            if len(password) < 6:
+                return JsonResponse({'status': 'fail', 'msg': '密码至少6个字符'}, status=400)
+            
             if User.objects.filter(username=username).exists():
                 # 用户名已存在
                 return JsonResponse({'status': 'fail', 'msg': '用户名已存在'}, status=409)
+            
             # 创建新用户
-            User.objects.create_user(username=username, password=password)
+            user = User.objects.create_user(username=username, password=password)
             Users.objects.create(id=username, pwd=password)
+            
             return JsonResponse({'status': 'success', 'msg': '注册成功'})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'fail', 'msg': 'JSON格式错误'}, status=400)
         except Exception as e:
             # 其他异常
             return JsonResponse({'status': 'fail', 'msg': str(e)}, status=400)
