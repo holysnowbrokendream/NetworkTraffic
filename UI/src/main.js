@@ -9,6 +9,9 @@ import ElementPlus from 'element-plus'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 
+// 配置 axios 基础 URL
+axios.defaults.baseURL = 'http://localhost:8000'
+
 // 添加全局样式来防止滚动，并支持主题切换
 const style = document.createElement('style')
 style.textContent = `

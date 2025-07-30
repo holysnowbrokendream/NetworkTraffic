@@ -1,1 +1,140 @@
-backend test/
+# ========================================
+# Network Traffic Analysis System - .gitignore
+# ========================================
+
+# ========================================
+# Python / Django
+# ========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# ========================================
+# Node.js / Frontend
+# ========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+.cache/
+.parcel-cache/
+
+# ========================================
+# Environment & Configuration
+# ========================================
+.env
+.env.local
+.env.production
+.env.development
+*.env
+
+# ========================================
+# Database & Data Files
+# ========================================
+*.db
+*.sqlite
+*.sqlite3
+mysql_data_prod/
+
+# ========================================
+# Logs & Temporary Files
+# ========================================
+logs/
+*.log
+temp/
+tmp/
+HTTP/temp/
+HTTP/staticfiles/
+
+# ========================================
+# Media & Upload Files
+# ========================================
+HTTP/media/
+
+# ========================================
+# SSL Certificates
+# ========================================
+nginx/ssl/
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# ========================================
+# IDE & Editor Files
+# ========================================
+.vscode/
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# ========================================
+# OS Generated Files
+# ========================================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ========================================
+# Build & Cache Files
+# ========================================
+UI/dist/
+UI/node_modules/
+.cache/
+*.cache
+
+# ========================================
+# Backup & Archive Files
+# ========================================
+*.bak
+*.backup
+*.old
+*.tar.gz
+*.zip
+*.rar
+*.7z
+backups/
+archives/
+
+# ========================================
+# Test Files
+# ========================================
+test/
+tests/
+*_test.py
+*_tests.py
+.coverage
+htmlcov/
+
+# ========================================
+# Security & Sensitive Files
+# ========================================
+secrets.json
+credentials.json
+config.ini
+*.pem
+*.key
+*.crt
+
+# ========================================
+# Docker
+# ========================================
+.dockerignore
+docker-compose.override.yml

@@ -1,0 +1,110 @@
+services:
+  # MySQL数据库 - 生产环境
+  mysql:
+    image: mysql:8.0
+    container_name: network_traffic_mysql_prod
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    volumes:
+      - mysql_data_prod:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    ports:
+      - "3307:3306"
+    networks:
+      - network_traffic_prod_network
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Django后端 - 生产环境
+  backend:
+    build:
+      context: ./HTTP
+      dockerfile: Dockerfile
+    container_name: network_traffic_backend_prod
+    environment:
+      - DEBUG=${DEBUG}
+      - DB_HOST=mysql
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=3306
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
+    volumes:
+      - ./HTTP:/app
+      - ./HTTP/media:/app/media
+      - ./HTTP/temp:/app/temp
+      - ./HTTP/staticfiles:/app/staticfiles
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - network_traffic_prod_network
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate &&
+              python manage.py collectstatic --noinput &&
+              gunicorn backend.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 120"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health/"]
+      timeout: 10s
+      retries: 5
+
+  # Vue前端 - 生产环境
+  frontend:
+    build:
+      context: ./UI
+      dockerfile: Dockerfile
+    container_name: network_traffic_frontend_prod
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+    ports:
+      - "23456:80"
+    depends_on:
+      - backend
+    networks:
+      - network_traffic_prod_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      timeout: 10s
+      retries: 5
+
+  # Nginx反向代理 - 生产环境 (可选，前端容器已包含Nginx)
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: network_traffic_nginx_prod
+  #   volumes:
+  #     - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf
+  #     - ./nginx/ssl:/etc/nginx/ssl
+  #     - ./logs/nginx:/var/log/nginx
+  #   ports:
+  #     - "8443:443"
+  #     - "8080:80"
+  #   depends_on:
+  #     - frontend
+  #     - backend
+  #   networks:
+  #     - network_traffic_prod_network
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:80/"]
+  #     timeout: 10s
+  #     retries: 5
+
+volumes:
+  mysql_data_prod:
+    driver: local
+
+networks:
+  network_traffic_prod_network:
+    driver: bridge 

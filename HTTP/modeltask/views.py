@@ -120,9 +120,15 @@ class ChatMessageCreateView(APIView):
                 file=file_obj,
                 filename=file_obj.name
             )
-        data = request.data.copy()
+        # 创建可序列化的数据副本，避免文件对象序列化问题
+        data = {}
+        for key, value in request.data.items():
+            if key != 'file':  # 跳过文件字段，避免序列化问题
+                data[key] = value
+        
         if file_instance:
             data['file'] = file_instance.id
+        
         serializer = ChatMessageSerializer(data=data)
         if serializer.is_valid():
             msg = serializer.save(session=session, file=file_instance if file_instance else None)
