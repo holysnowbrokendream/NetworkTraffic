@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework',  # DRF支持
     'userauth',  # 用户认证应用
     'modeltask',  # 模型任务应用
+    'toolsinter',  # 工具接口应用
 ]
 
 # 中间件配置
@@ -187,3 +188,22 @@ SIMPLE_JWT = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# 工具接口配置
+TOOL_INTERFACES = {
+    'TRAFFIC_ANALYSIS': {
+        'URL': 'http://localhost:8001/api/traffic_analysis',
+        'NAME': '流量分析报告工具'
+    },
+    'CUSTOM_TRAFFIC': {
+        'URL': 'http://localhost:8002/api/custom_traffic', 
+        'NAME': '自定义流量生成工具'
+    },
+    'TRAFFIC_RULES': {
+        'URL': 'http://localhost:8003/api/traffic_rules',
+        'NAME': '流量规则提取工具'
+    }
+}
+
+# 工具接口超时设置（秒）
+TOOL_TIMEOUT = 10

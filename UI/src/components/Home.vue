@@ -233,9 +233,15 @@
                 </span>
               </div>
               
-              <div v-if="mode==='pcap'||mode==='rules'" class="welcome-mode-indicator">
-                <span>当前模式：<b>{{ mode==='pcap' ? '流量分析报告' : '流量规则' }}</b></span>
-                <el-input v-model="customFileName" size="small" style="width:180px;margin-left:12px;" :placeholder="mode==='pcap'?'pcap.txt':'rules.txt'" />
+              <div v-if="mode==='traffic_analysis'||mode==='custom_traffic'||mode==='traffic_rules'" class="welcome-mode-indicator">
+                <span>当前模式：<b>{{ 
+                  mode==='traffic_analysis' ? '流量分析报告' : 
+                  mode==='custom_traffic' ? '自定义流量生成' : '流量规则提取' 
+                }}</b></span>
+                <el-input v-model="customFileName" size="small" style="width:180px;margin-left:12px;" :placeholder="
+                  mode==='traffic_analysis' ? 'report.txt' :
+                  mode==='custom_traffic' ? 'pcap.txt' : 'rules.txt'
+                " />
                 <el-button size="small" type="text" style="margin-left:12px;" @click="cancelMode">取消指令</el-button>
               </div>
               
@@ -265,8 +271,9 @@
                       </el-button>
                       <template #dropdown>
                         <el-dropdown-menu>
-                          <el-dropdown-item command="pcap">生成pcap.txt</el-dropdown-item>
-                          <el-dropdown-item command="rules">生成rules.txt</el-dropdown-item>
+                          <el-dropdown-item command="traffic_analysis">流量分析报告</el-dropdown-item>
+                          <el-dropdown-item command="custom_traffic">自定义流量生成</el-dropdown-item>
+                          <el-dropdown-item command="traffic_rules">流量规则提取</el-dropdown-item>
                         </el-dropdown-menu>
                       </template>
                     </el-dropdown>
@@ -274,7 +281,24 @@
                   
                   <!-- 右侧发送按钮 -->
                   <div class="welcome-right-buttons">
-                    <el-button type="primary" @click="sendMsg" :disabled="!isLogin" class="welcome-send-box-button">发送</el-button>
+                    <el-button 
+                      v-if="!isSending"
+                      type="primary" 
+                      @click="sendMsg" 
+                      :disabled="!isLogin" 
+                      class="welcome-send-box-button"
+                    >
+                      发送
+                    </el-button>
+                    <el-button 
+                      v-else
+                      type="warning" 
+                      @click="cancelCurrentRequest" 
+                      :disabled="!isLogin" 
+                      class="welcome-cancel-box-button"
+                    >
+                      取消
+                    </el-button>
                   </div>
                 </div>
               </div>
@@ -348,7 +372,12 @@
                 <template v-else>
                   <div class="chat-bubble user-bubble">
                     <div class="bubble-content">
-                      <template v-if="msg.files && msg.files.length">
+                      <template v-if="msg.files && msg.files.length && msg.content.includes('目标文件：')">
+                        <!-- 当消息内容包含文件信息时，只显示消息内容（包含HTML链接） -->
+                        <div class="message-text" v-html="msg.content"></div>
+                      </template>
+                      <template v-else-if="msg.files && msg.files.length">
+                        <!-- 其他情况显示单独的文件链接 -->
                         <div v-for="file in msg.files" :key="file.file_id" class="file-link">
                           <el-link @click="handleFileLinkClickGeneral($event, file.url)">{{ file.filename }}</el-link>
                         </div>
@@ -381,9 +410,15 @@
               </span>
             </div>
             
-            <div v-if="mode==='pcap'||mode==='rules'" class="mode-indicator">
-              <span>当前模式：<b>{{ mode==='pcap' ? '流量分析报告' : '流量规则' }}</b></span>
-              <el-input v-model="customFileName" size="small" style="width:180px;margin-left:12px;" :placeholder="mode==='pcap'?'pcap.txt':'rules.txt'" />
+            <div v-if="mode==='traffic_analysis'||mode==='custom_traffic'||mode==='traffic_rules'" class="mode-indicator">
+              <span>当前模式：<b>{{ 
+                mode==='traffic_analysis' ? '流量分析报告' : 
+                mode==='custom_traffic' ? '自定义流量生成' : '流量规则提取' 
+              }}</b></span>
+              <el-input v-model="customFileName" size="small" style="width:180px;margin-left:12px;" :placeholder="
+                mode==='traffic_analysis' ? 'report.txt' :
+                mode==='custom_traffic' ? 'pcap.txt' : 'rules.txt'
+              " />
               <el-button size="small" type="text" style="margin-left:12px;" @click="cancelMode">取消指令</el-button>
             </div>
             
@@ -413,8 +448,9 @@
                     </el-button>
                     <template #dropdown>
                       <el-dropdown-menu>
-                        <el-dropdown-item command="pcap">生成pcap.txt</el-dropdown-item>
-                        <el-dropdown-item command="rules">生成rules.txt</el-dropdown-item>
+                        <el-dropdown-item command="traffic_analysis">流量分析报告</el-dropdown-item>
+                        <el-dropdown-item command="custom_traffic">自定义流量生成</el-dropdown-item>
+                        <el-dropdown-item command="traffic_rules">流量规则提取</el-dropdown-item>
                       </el-dropdown-menu>
                     </template>
                   </el-dropdown>
@@ -422,7 +458,24 @@
                 
                 <!-- 右侧发送按钮 -->
                 <div class="right-buttons">
-                  <el-button type="primary" @click="sendMsg" :disabled="!isLogin" class="send-box-button">发送</el-button>
+                  <el-button 
+                    v-if="!isSending"
+                    type="primary" 
+                    @click="sendMsg" 
+                    :disabled="!isLogin" 
+                    class="send-box-button"
+                  >
+                    发送
+                  </el-button>
+                  <el-button 
+                    v-else
+                    type="warning" 
+                    @click="cancelCurrentRequest" 
+                    :disabled="!isLogin" 
+                    class="cancel-box-button"
+                  >
+                    取消
+                  </el-button>
                 </div>
               </div>
               
@@ -499,6 +552,10 @@ export default {
     const batchDownloadMode = ref(false); // 批量下载模式
     const selectedFiles = ref([]); // 选中的文件列表
     const sessionPanelExpanded = ref(false); // 历史会话栏展开状态
+    
+    // 新增：发送状态控制
+    const isSending = ref(false); // 是否正在发送
+    const currentRequest = ref(null); // 当前请求的AbortController
     
     // 主题切换功能
     const isDarkMode = ref(localStorage.getItem('theme') !== 'light');
@@ -597,119 +654,6 @@ export default {
         done();
       }, 500);
       return;
-      
-      // 暂时注释掉复杂动画逻辑，先确保基本功能正常
-      /*
-      // 获取目标位置
-      const targetPositions = {};
-      if (chatTitle.value) {
-        targetPositions.title = getElementBounds(chatTitle.value);
-      }
-      if (chatMessage.value) {
-        targetPositions.message = getElementBounds(chatMessage.value);
-      }
-      if (chatInput.value) {
-        targetPositions.input = getElementBounds(chatInput.value);
-      }
-      
-      if (!animationData.value.title || !targetPositions.title) {
-        // 如果没有动画数据，直接显示
-        el.style.opacity = '1';
-        document.body.classList.remove('animating');
-        done();
-        return;
-      }
-      
-      // 创建动画元素
-      const createAnimationElement = (sourceData, targetData, originalEl, content, additionalStyles = {}) => {
-        const animEl = document.createElement('div');
-        animEl.className = 'animation-element';
-        animEl.innerHTML = content;
-        
-        // 设置初始位置和样式
-        Object.assign(animEl.style, {
-          left: sourceData.x + 'px',
-          top: sourceData.y + 'px',
-          width: sourceData.width + 'px',
-          height: sourceData.height + 'px',
-          transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-          transformOrigin: 'center center',
-          opacity: '1',
-          ...additionalStyles
-        });
-        
-        // 复制部分原始样式
-        const computedStyle = window.getComputedStyle(originalEl);
-        animEl.style.backgroundColor = computedStyle.backgroundColor;
-        animEl.style.border = computedStyle.border;
-        animEl.style.borderRadius = computedStyle.borderRadius;
-        animEl.style.boxShadow = computedStyle.boxShadow;
-        
-        document.body.appendChild(animEl);
-        
-        // 触发动画
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            const scaleX = targetData.width / sourceData.width;
-            const scaleY = targetData.height / sourceData.height;
-            const translateX = targetData.x - sourceData.x;
-            const translateY = targetData.y - sourceData.y;
-            
-            animEl.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
-          });
-        });
-        
-        return animEl;
-      };
-      
-      const animationElements = [];
-      
-      // 创建标题动画
-      if (animationData.value.title && targetPositions.title && chatTitle.value) {
-        const titleEl = createAnimationElement(
-          animationData.value.title,
-          targetPositions.title,
-          chatTitle.value,
-          '<span style="display: flex; align-items: center; justify-content: center; height: 100%; font-size: 48px; color: var(--text-accent); font-weight: 700; letter-spacing: 2px; text-shadow: 0 4px 20px var(--accent-shadow-light);">网络流量研判大模型对话助手</span>'
-        );
-        animationElements.push(titleEl);
-      }
-      
-      // 创建消息动画
-      if (animationData.value.message && targetPositions.message && chatMessage.value) {
-        const messageEl = createAnimationElement(
-          animationData.value.message,
-          targetPositions.message,
-          chatMessage.value,
-          '<div style="display: flex; align-items: flex-start; gap: 16px; padding: 20px 24px;"><div style="width: 60px; height: 60px; border-radius: 50%; background: var(--bg-tertiary); border: 3px solid var(--bg-quaternary); display: flex; align-items: center; justify-content: center; color: var(--text-accent); font-weight: bold; font-size: 18px; flex-shrink: 0; box-shadow: 0 6px 24px var(--shadow-color);">AI</div><div style="background: var(--bg-secondary); border: 2px solid var(--bg-tertiary); color: var(--text-primary); border-radius: 24px; border-bottom-left-radius: 8px; padding: 20px 24px; font-size: 20px; font-weight: 500; box-shadow: 0 8px 32px var(--shadow-color); position: relative;">你好，有什么可以帮你？<div style="position: absolute; bottom: 0; left: -12px; width: 0; height: 0; border-right: 16px solid var(--bg-secondary); border-bottom: 16px solid transparent;"></div></div></div>'
-        );
-        animationElements.push(messageEl);
-      }
-      
-      // 创建输入框动画
-      if (animationData.value.input && targetPositions.input && chatInput.value) {
-        const inputEl = createAnimationElement(
-          animationData.value.input,
-          targetPositions.input,
-          chatInput.value,
-          '<div style="background: var(--bg-tertiary); border-radius: 48px; border: 4px solid var(--border-color); height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 18px; box-shadow: 0 16px 64px var(--shadow-color);">和我聊聊天吧 (Enter发送，Shift+Enter换行)</div>'
-        );
-        animationElements.push(inputEl);
-      }
-      
-      // 动画完成后清理
-      setTimeout(() => {
-        animationElements.forEach(animEl => {
-          if (animEl && animEl.parentNode) {
-            animEl.parentNode.removeChild(animEl);
-          }
-        });
-        
-        el.style.opacity = '1';
-        document.body.classList.remove('animating');
-        done();
-      }, 800);
-      */
     };
     
     const afterEnter = (el) => {
@@ -745,14 +689,10 @@ export default {
       ElMessage.success('已退出登录');
     };
     // 处理键盘事件
-    const handleKeyDown = (event) => {
-      if (event.key === 'Enter') {
-        if (event.shiftKey) {
-          // Shift+Enter：换行，不阻止默认行为
-          return;
-        } else {
-          // Enter：发送消息
-          event.preventDefault();
+    const handleKeyDown = (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (!isSending.value) { // 只有在非发送状态时才允许发送
           sendMsg();
         }
       }
@@ -771,63 +711,219 @@ export default {
     const sendMsg = async () => {
       if (!isLogin.value) return;
       if (!inputMsg.value.trim() && pendingFiles.value.length === 0) return;
+      if (isSending.value) return; // 如果正在发送，直接返回
       
-      // 第一次发送消息时切换到正常模式
-      if (isWelcomeMode.value) {
-        isWelcomeMode.value = false;
-      }
+      // 设置发送状态
+      isSending.value = true;
       
-      if (mode.value === 'chat') {
-        // 普通对话
-        messages.value.push({ role: 'user', content: inputMsg.value, files: [...pendingFiles.value] });
-        scrollToBottom(); // 滚动到底部显示用户消息
-        const file_ids = pendingFiles.value.map(f => f.file_id);
-        inputMsg.value = '';
-        pendingFiles.value = [];
-        uploadedFileIds.value = [];
-        try {
-          const res = await axios.post('http://localhost:8000/api/llm/chat/', {
-            messages: messages.value,
-            file_ids: file_ids
-          });
-          messages.value.push({ role: 'ai', content: res.data.reply });
-          scrollToBottom(); // 滚动到底部显示AI回复
-        } catch (e) {
-          messages.value.push({ role: 'ai', content: '大模型接口异常' });
-          scrollToBottom(); // 滚动到底部显示错误消息
+      // 创建AbortController用于取消请求
+      const abortController = new AbortController();
+      currentRequest.value = abortController;
+      
+      // 立即保存当前输入内容，然后重置
+      const currentInput = inputMsg.value;
+      const currentPendingFiles = [...pendingFiles.value];
+      const currentUploadedFileIds = [...uploadedFileIds.value];
+      const currentCustomFileName = customFileName.value;
+      const currentMode = mode.value;
+      
+      // 立即重置输入状态
+      inputMsg.value = '';
+      pendingFiles.value = [];
+      uploadedFileIds.value = [];
+      customFileName.value = '';
+      mode.value = 'chat';
+      
+      try {
+        // 第一次发送消息时切换到正常模式
+        if (isWelcomeMode.value) {
+          isWelcomeMode.value = false;
         }
-      } else if (mode.value === 'pcap' || mode.value === 'rules') {
-        // 生成txt文件，内容为：上传文件名+对话内容
-        const filenames = pendingFiles.value.map(f => f.filename).join(', ');
-        const content = filenames + (inputMsg.value ? (filenames ? ' ' : '') + inputMsg.value : '');
-        const filename = customFileName.value.trim() || (mode.value === 'pcap' ? 'pcap.txt' : 'rules.txt');
-        try {
-          const res = await axios.post('http://localhost:8000/api/modeltask/create_txt_file/', {
-            filename: filename,
-            filetype: mode.value,
-            content: content
-          }, {
-            headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
-          });
-          // 由AI发送生成的文件
-          messages.value.push({ role: 'user', content: (pendingFiles.value.length ? '\n' : '') + inputMsg.value, files: [...pendingFiles.value] });
+        
+        if (currentMode === 'chat') {
+          // 普通对话
+          messages.value.push({ role: 'user', content: currentInput, files: [...currentPendingFiles] });
           scrollToBottom(); // 滚动到底部显示用户消息
-          messages.value.push({ role: 'ai', content: '', files: [res.data] });
-          scrollToBottom(); // 滚动到底部显示AI生成的文件
-          ElMessage.success('文件生成成功');
-          fetchUserFiles();
-        } catch (e) {
-          ElMessage.error('文件生成失败');
+          const file_ids = currentPendingFiles.map(f => f.file_id);
+          try {
+            const res = await axios.post('http://localhost:8000/api/llm/chat/', {
+              messages: messages.value,
+              file_ids: file_ids
+            }, {
+              signal: abortController.signal
+            });
+            messages.value.push({ role: 'ai', content: res.data.reply });
+            scrollToBottom(); // 滚动到底部显示AI回复
+          } catch (e) {
+            if (e.name === 'AbortError') {
+              ElMessage.info('请求已取消');
+              return;
+            }
+            messages.value.push({ role: 'ai', content: '大模型接口异常' });
+            scrollToBottom(); // 滚动到底部显示错误消息
+          }
+        } else if (currentMode === 'traffic_analysis' || currentMode === 'custom_traffic' || currentMode === 'traffic_rules') {
+          // 构建用户操作记录消息
+          let userActionMessage = `选择${currentMode === 'traffic_analysis' ? '流量分析报告' : currentMode === 'custom_traffic' ? '自定义流量生成' : '流量规则提取'}模式`;
+          
+          // 如果有上传文件，添加文件信息
+          if (currentPendingFiles.length > 0) {
+            const fileLinks = currentPendingFiles.map(f => `<a href="${f.url}" target="_blank" style="color: var(--text-accent); text-decoration: underline;">${f.filename}</a>`).join(', ');
+            userActionMessage += `\n目标文件：${fileLinks}`;
+          }
+          
+          // 如果用户输入了规则，添加规则信息
+          if (currentInput.trim()) {
+            userActionMessage += `\n要求：${currentInput.trim()}`;
+          }
+          
+          // 添加用户操作记录到对话框
+          messages.value.push({
+            role: 'user',
+            content: userActionMessage,
+            files: currentPendingFiles // 添加文件信息用于渲染链接
+          });
+          
+          // 根据模式调用不同的工具接口
+          let apiEndpoint = '';
+          let requestData = {};
+          
+          if (currentMode === 'traffic_analysis') {
+            // 流量分析报告模式：需要上传文件（不限制文件类型）
+            if (currentPendingFiles.length === 0) {
+              ElMessage.warning('流量分析报告模式需要上传pcap文件');
+              return;
+            }
+            apiEndpoint = 'http://localhost:8000/api/toolsinter/traffic_analysis_report/';
+            requestData = {
+              pcap_file: currentPendingFiles[0].url // 使用第一个上传的文件
+            };
+          } else if (currentMode === 'custom_traffic') {
+            // 自定义流量生成模式：需要用户输入规则
+            if (!currentInput.trim()) {
+              ElMessage.warning('自定义流量生成模式需要输入流量生成规则');
+              return;
+            }
+            apiEndpoint = 'http://localhost:8000/api/toolsinter/custom_traffic_generation/';
+            requestData = {
+              traffic_rules: currentInput.trim()
+            };
+          } else if (currentMode === 'traffic_rules') {
+            // 流量规则提取模式：需要上传pcap文件
+            if (currentPendingFiles.length === 0) {
+              ElMessage.warning('流量规则提取模式需要上传pcap文件');
+              return;
+            }
+            apiEndpoint = 'http://localhost:8000/api/toolsinter/traffic_rules_extraction/';
+            requestData = {
+              pcap_file: currentPendingFiles[0].url // 使用第一个上传的文件
+            };
+          }
+          
+          try {
+            const res = await axios.post(apiEndpoint, requestData, {
+              headers: { Authorization: 'Bearer ' + localStorage.getItem('token') },
+              signal: abortController.signal
+            });
+            
+            if (res.data.status === 'success') {
+              // 将生成的文件添加到待发送文件列表
+              const generatedFile = {
+                file_id: Date.now(), // 临时ID
+                filename: res.data.filename,
+                url: `data:text/plain;base64,${btoa(res.data.content)}`, // 将内容转换为data URL
+                content: res.data.content
+              };
+              pendingFiles.value.push(generatedFile);
+              uploadedFileIds.value.push(generatedFile.file_id);
+              
+              // 添加成功消息
+              messages.value.push({
+                role: 'ai',
+                content: res.data.message
+              });
+              
+              // 滚动到底部
+              nextTick(() => {
+                scrollToBottom();
+              });
+            } else {
+              ElMessage.error(res.data.message || '工具调用失败');
+            }
+          } catch (error) {
+            if (error.name === 'AbortError') {
+              ElMessage.info('请求已取消');
+              return;
+            }
+            console.error('工具调用错误:', error);
+            ElMessage.error('工具调用失败，请检查网络连接或联系管理员');
+            
+            // 添加错误消息到对话
+            messages.value.push({
+              role: 'ai',
+              content: '抱歉，工具调用失败。请检查网络连接或联系管理员。'
+            });
+            
+            scrollToBottom();
+          }
+        } else {
+          // 生成txt文件，内容为：上传文件名+对话内容
+          const filenames = currentPendingFiles.map(f => f.filename).join(', ');
+          const content = filenames + (currentInput ? (filenames ? ' ' : '') + currentInput : '');
+          const filename = currentCustomFileName.trim() || (currentMode === 'traffic_analysis' ? 'report.txt' : currentMode === 'custom_traffic' ? 'pcap.txt' : 'rules.txt');
+          try {
+            const res = await axios.post('http://localhost:8000/api/modeltask/create_txt_file/', {
+              filename: filename,
+              filetype: currentMode,
+              content: content
+            }, {
+              headers: { Authorization: 'Bearer ' + localStorage.getItem('token') },
+              signal: abortController.signal
+            });
+            // 由AI发送生成的文件
+            messages.value.push({ role: 'user', content: (currentPendingFiles.length ? '\n' : '') + currentInput, files: [...currentPendingFiles] });
+            scrollToBottom(); // 滚动到底部显示用户消息
+            messages.value.push({ role: 'ai', content: '', files: [res.data] });
+            scrollToBottom(); // 滚动到底部显示AI生成的文件
+            ElMessage.success('文件生成成功');
+            fetchUserFiles();
+          } catch (e) {
+            if (e.name === 'AbortError') {
+              ElMessage.info('请求已取消');
+              return;
+            }
+            ElMessage.error('文件生成失败');
+          }
         }
-        inputMsg.value = '';
-        pendingFiles.value = [];
-        uploadedFileIds.value = [];
-        customFileName.value = '';
-        mode.value = 'chat';
+        await saveCurrentSession(undefined, messages.value);
+        fetchUserSessions();
+      } finally {
+        // 重置发送状态
+        isSending.value = false;
+        currentRequest.value = null;
       }
-      await saveCurrentSession(undefined, messages.value);
-      fetchUserSessions();
     };
+    
+    // 新增：取消当前请求
+    const cancelCurrentRequest = () => {
+      if (currentRequest.value) {
+        currentRequest.value.abort();
+        currentRequest.value = null;
+      }
+      isSending.value = false;
+      
+      // 添加取消消息到对话
+      messages.value.push({
+        role: 'ai',
+        content: '已手动取消'
+      });
+      
+      // 滚动到底部显示取消消息
+      scrollToBottom();
+      
+      ElMessage.info('请求已取消');
+    };
+    
     // 文件上传（多文件），上传后暂存到 pendingFiles
     const uploadFile = async (option) => {
       if (!isLogin.value) return;
@@ -887,7 +983,13 @@ export default {
     // 指令选择处理
     const handleModeCommand = (command) => {
       mode.value = command;
-      customFileName.value = command === 'pcap' ? 'pcap.txt' : 'rules.txt';
+      if (command === 'traffic_analysis') {
+        customFileName.value = 'report.txt';
+      } else if (command === 'custom_traffic') {
+        customFileName.value = 'pcap.txt';
+      } else if (command === 'traffic_rules') {
+        customFileName.value = 'rules.txt';
+      }
     };
     // 取消指令
     const cancelMode = () => {
@@ -1277,7 +1379,10 @@ export default {
       createNewSession,
       saveCurrentSession,
       onRenameConfirmClick,
-      isSessionEmpty
+      isSessionEmpty,
+      // 新增：发送状态控制
+      isSending,
+      cancelCurrentRequest
     };
   }
 };
@@ -2389,32 +2494,106 @@ html, body {
 
 /* 发送按钮样式 */
 .send-box-button {
-  border-radius: 22px !important;
-  padding: 10px 30px !important;
-  font-size: 16px !important;
-  font-weight: 600 !important;
-  background-color: var(--text-accent) !important;
-  border-color: var(--text-accent) !important;
-  color: var(--button-hover) !important;
-  box-shadow: 0 4px 16px var(--accent-shadow) !important;
+  background: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
   transition: all 0.25s ease !important;
-  height: 44px !important;
-  min-width: 100px !important;
+  min-width: 80px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  box-shadow: 0 2px 8px var(--shadow-color) !important;
 }
 
 .send-box-button:hover {
-  background-color: var(--accent-hover) !important;
-  border-color: var(--accent-hover) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 8px 24px var(--accent-shadow-strong) !important;
+  background: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px var(--shadow-color) !important;
 }
 
-[data-theme="light"] .send-box-button {
-  box-shadow: 0 4px 16px var(--accent-shadow) !important;
+.send-box-button:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 8px var(--shadow-color) !important;
 }
 
-[data-theme="light"] .send-box-button:hover {
-  box-shadow: 0 8px 24px var(--accent-shadow-strong) !important;
+/* 取消按钮样式 */
+.cancel-box-button {
+  background: var(--warning-color) !important;
+  border-color: var(--warning-color) !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  transition: all 0.25s ease !important;
+  min-width: 80px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  box-shadow: 0 2px 8px var(--shadow-color) !important;
+}
+
+.cancel-box-button:hover {
+  background: var(--warning-hover) !important;
+  border-color: var(--warning-hover) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px var(--shadow-color) !important;
+}
+
+.cancel-box-button:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 8px var(--shadow-color) !important;
+}
+
+/* 欢迎模式发送按钮样式 */
+.welcome-send-box-button {
+  background: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  transition: all 0.25s ease !important;
+  min-width: 80px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  box-shadow: 0 2px 8px var(--shadow-color) !important;
+}
+
+.welcome-send-box-button:hover {
+  background: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px var(--shadow-color) !important;
+}
+
+.welcome-send-box-button:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 8px var(--shadow-color) !important;
+}
+
+/* 欢迎模式取消按钮样式 */
+.welcome-cancel-box-button {
+  background: var(--warning-color) !important;
+  border-color: var(--warning-color) !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  transition: all 0.25s ease !important;
+  min-width: 80px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  box-shadow: 0 2px 8px var(--shadow-color) !important;
+}
+
+.welcome-cancel-box-button:hover {
+  background: var(--warning-hover) !important;
+  border-color: var(--warning-hover) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px var(--shadow-color) !important;
+}
+
+.welcome-cancel-box-button:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 8px var(--shadow-color) !important;
 }
 
 /* 下拉菜单优化 */

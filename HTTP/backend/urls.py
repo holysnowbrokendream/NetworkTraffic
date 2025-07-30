@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/llm/upload/', userauth_views.llm_upload),
     path('api/userauth/', include('userauth.urls')),  # 用户认证相关接口
     path('api/modeltask/', include('modeltask.urls')),  # 模型任务相关接口
+    path('api/toolsinter/', include('toolsinter.urls')),  # 工具接口相关接口
 ]
 
 # 在开发环境中提供媒体文件和静态文件服务
