@@ -41,9 +41,16 @@ echo npm is available ✓
 
 REM Stop existing frontend service
 echo Stopping existing frontend service...
-docker-compose -f docker-compose.production.yml stop frontend 2>nul
-docker-compose -f docker-compose.production.yml rm -f frontend 2>nul
-echo Frontend service stopped ✓
+REM Check if frontend container exists before trying to stop it
+docker-compose -f docker-compose.production.yml ps frontend 2>nul | findstr "Up\|Exit" >nul
+if %errorlevel% equ 0 (
+    echo Frontend container found, stopping it...
+    docker-compose -f docker-compose.production.yml stop frontend 2>nul
+    docker-compose -f docker-compose.production.yml rm -f frontend 2>nul
+    echo Frontend service stopped ✓
+) else (
+    echo No existing frontend container found, skipping stop operation ✓
+)
 
 REM Build frontend application
 echo Building frontend application...

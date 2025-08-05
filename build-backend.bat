@@ -25,8 +25,8 @@ if not exist ".env" (
     echo # ========================================
     echo.
     echo # Database Configuration
-    echo DB_NAME=all_users
-    echo DB_USER=root
+    echo DB_NAME=NetworkTraffic
+    echo DB_USER=nwt_user
     echo DB_PASSWORD=123456
     echo DB_HOST=mysql
     echo DB_PORT=3306
@@ -64,9 +64,16 @@ echo Directories created ✓
 
 REM Stop existing backend service
 echo Stopping existing backend service...
-docker-compose -f docker-compose.production.yml stop backend 2>nul
-docker-compose -f docker-compose.production.yml rm -f backend 2>nul
-echo Backend service stopped ✓
+REM Check if backend container exists before trying to stop it
+docker-compose -f docker-compose.production.yml ps backend 2>nul | findstr "Up\|Exit" >nul
+if %errorlevel% equ 0 (
+    echo Backend container found, stopping it...
+    docker-compose -f docker-compose.production.yml stop backend 2>nul
+    docker-compose -f docker-compose.production.yml rm -f backend 2>nul
+    echo Backend service stopped ✓
+) else (
+    echo No existing backend container found, skipping stop operation ✓
+)
 
 REM Build backend image
 echo Building backend Docker image...

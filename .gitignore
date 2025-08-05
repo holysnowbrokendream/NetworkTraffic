@@ -51,7 +51,9 @@ mysql_data_prod/
 # ========================================
 logs/
 *.log
-temp/
+temp/bert/
+temp/gen/
+temp/rule/
 tmp/
 HTTP/temp/
 HTTP/staticfiles/

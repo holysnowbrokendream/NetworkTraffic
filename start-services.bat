@@ -37,8 +37,15 @@ echo All required images found ✓
 
 REM Stop all existing services
 echo Stopping all existing services...
-docker-compose -f docker-compose.production.yml down
-echo All services stopped ✓
+REM Check if any services are running before trying to stop them
+docker-compose -f docker-compose.production.yml ps 2>nul | findstr "Up\|Exit" >nul
+if %errorlevel% equ 0 (
+    echo Services found, stopping them...
+    docker-compose -f docker-compose.production.yml down
+    echo All services stopped ✓
+) else (
+    echo No existing services found, skipping stop operation ✓
+)
 
 REM Start services step by step
 echo Starting MySQL database...
