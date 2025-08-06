@@ -40,14 +40,15 @@ NetworkTraffic 是一个基于 Django + Vue.js 的网络流量分析系统，采
 ## 🖥️ 系统要求
 
 ### 最低配置
-- **操作系统**: Windows 10/11, macOS 10.15+, Ubuntu 18.04+
+- **操作系统**: Windows 10/11, macOS 10.15+, Ubuntu 18.04+, CentOS 7+
 - **内存**: 8GB RAM
 - **存储**: 20GB 可用空间
-- **网络**: 稳定的互联网连接
+- **网络**: 稳定的互联网/内网连接
 
 ### 必需软件
-- **Docker Desktop**: 版本 20.10+ 
+- **Docker / Docker Desktop**: 版本 20.10+ 
 - **Node.js**: 版本 18.0+ (用于前端构建)
+- **Python3**: 版本 3.8+ (部分脚本和开发环境)
 
 ### 可选软件
 - **Git**: 版本 2.30+ (用于代码管理，如果从仓库下载代码则需要)
@@ -56,251 +57,220 @@ NetworkTraffic 是一个基于 Django + Vue.js 的网络流量分析系统，采
 
 ## 🔧 环境准备
 
-### 1. 安装 Docker Desktop
+### Windows 环境
 
-**Windows 用户:**
-1. 访问 [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)
-2. 下载并安装 Docker Desktop
-3. 启动 Docker Desktop
-4. 确保 Docker 服务正在运行
+1. 安装 [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)
+2. 安装 [Node.js](https://nodejs.org/)（LTS 18.x 或更高）
+3. （可选）安装 [Git for Windows](https://git-scm.com/)
+4. 验证安装：
+   ```bash
+   docker --version
+   docker-compose --version
+   node --version
+   npm --version
+   git --version
+   ```
 
-**验证安装:**
-```bash
-docker --version
-docker-compose --version
-```
+### Linux 环境（CentOS/Ubuntu/RHEL）
 
-### 2. 安装 Node.js
-
-**Windows 用户:**
-1. 访问 [Node.js 官网](https://nodejs.org/)
-2. 下载 LTS 版本 (推荐 18.x 或更高)
-3. 安装 Node.js (包含 npm)
-
-**验证安装:**
-```bash
-node --version
-npm --version
-```
-
-### 3. 获取项目代码
-
-**方案 A: 使用 Git (推荐)**
-```bash
-git clone <项目仓库地址>
-cd NetworkTraffic
-```
-
-**方案 B: 直接下载**
-1. 访问项目仓库页面
-2. 点击 "Code" → "Download ZIP"
-3. 解压到本地目录
-4. 重命名为 `NetworkTraffic`
+1. 安装 Docker
+   ```bash
+   # CentOS/RHEL
+   sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+   sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+   sudo yum install -y docker-ce docker-ce-cli containerd.io
+   sudo systemctl start docker && sudo systemctl enable docker
+   sudo usermod -aG docker $USER
+   
+   # Ubuntu
+   sudo apt-get update
+   sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+   echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+   sudo apt-get update
+   sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+   sudo systemctl start docker && sudo systemctl enable docker
+   sudo usermod -aG docker $USER
+   ```
+   
+2. 安装 Docker Compose
+   ```bash
+   sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+   sudo chmod +x /usr/local/bin/docker-compose
+   docker-compose --version
+   ```
+   
+3. 安装 Node.js
+   ```bash
+   # CentOS/RHEL
+   curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo bash -
+   sudo yum install -y nodejs
+   
+   # Ubuntu
+   curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+   sudo apt-get install -y nodejs
+   node --version
+   npm --version
+   ```
+   
+4. 安装 Python3
+   ```bash
+   # CentOS/RHEL
+   sudo yum install -y python3 python3-pip
+   
+   # Ubuntu
+   sudo apt-get install -y python3 python3-pip
+   python3 --version
+   ```
+   
+5. （可选）安装 Git
+   ```bash
+   sudo yum install -y git   # CentOS/RHEL
+   sudo apt-get install -y git   # Ubuntu
+   git --version
+   ```
 
 ---
 
 ## 🚀 快速部署
 
-### 🌐 内网部署
+### Windows 版本
 
-**如需将系统部署到内网环境，使同一局域网内的其他设备能够访问，请先查看详细的内网部署指南：**
-
-📖 **[内网部署指南.md](内网部署指南.md)**
-
-在网络与防火墙配置完成后，再运行后续部署脚本
-
-### 一键部署 (推荐)
-
-1. **运行一键部署脚本:**
+1. **一键部署**
    ```bash
    deploy-all.bat
    ```
+2. **分步部署**
+   - 构建后端：`build-backend.bat`
+   - 构建前端：`build-frontend.bat`
+   - 启动服务：`start-services.bat`
+3. **内网部署**
+   - 网络访问配置：`cd HTTP && configure_network_access.bat`
+   - 防火墙配置：`cd HTTP && configure_firewall.bat`
 
-2. **等待部署完成** (约 10-20 分钟)
-   - 自动构建后端 (Django)
-   - 自动构建前端 (Vue.js)
-   - 自动启动所有服务
+### Linux 版本
 
-3. **访问应用:**
-   - 前端应用: http://localhost:23456
-   - 后端API: http://localhost:8000
-   - 管理界面: http://localhost:8000/admin/
-
-4. **测试账户:**
-   - 管理员: `admin` / `123456`
-   - 测试用户: `yang` / `123456`
+1. **赋予脚本执行权限**
+   ```bash
+   chmod +x deploy-all.sh build-backend.sh build-frontend.sh start-services.sh
+   chmod +x HTTP/configure_firewall.sh HTTP/configure_network_access.sh
+   ```
+2. **一键部署**
+   ```bash
+   ./deploy-all.sh
+   ```
+3. **分步部署**
+   - 构建后端：`./build-backend.sh`
+   - 构建前端：`./build-frontend.sh`
+   - 启动服务：`./start-services.sh`
+4. **内网部署**
+   - 网络访问配置：`cd HTTP && ./configure_network_access.sh`
+   - 防火墙配置：`cd HTTP && sudo ./configure_firewall.sh`
 
 ---
 
+### 内网部署
 
 ## 🛠️ 脚本使用指南
 
-### 可用的部署脚本
+### Windows 版本
 
-#### 1. 完整部署脚本
-- **`deploy-all.bat`** - 一键完整部署脚本
-  - 构建后端 (Django API)
-  - 构建前端 (Vue.js)
-  - 启动所有服务 (MySQL, Backend, Frontend)
-  - 创建默认用户账户
-  - 测试API功能
+- **deploy-all.bat**：一键完整部署脚本
+- **build-backend.bat**：构建后端 Docker 镜像
+- **build-frontend.bat**：构建前端应用和镜像
+- **start-services.bat**：启动所有服务
+- **HTTP/configure_firewall.bat**：配置防火墙规则
+- **HTTP/configure_network_access.bat**：配置网络访问
+- **setup_dev_env.bat**：开发环境变量设置
+- **setup_dev_complete.bat**：完整开发环境设置
+- **cli_tool.bat**：CLI 工具启动脚本
 
-#### 2. 分步构建脚本
-- **`build-backend.bat`** - 构建后端Docker镜像
-- **`build-frontend.bat`** - 构建前端应用和Docker镜像
+### Linux 版本
 
-#### 3. 服务管理脚本
-- **`start-services.bat`** - 启动所有服务
-  - 按顺序启动 MySQL → Backend → Frontend
-  - 包含健康检查和等待机制
-  - 创建默认用户账户
-  - 测试API功能
+- **deploy-all.sh**：一键完整部署脚本
+- **build-backend.sh**：构建后端 Docker 镜像
+- **build-frontend.sh**：构建前端应用和镜像
+- **start-services.sh**：启动所有服务
+- **HTTP/configure_firewall.sh**：配置防火墙规则
+- **HTTP/configure_network_access.sh**：配置网络访问
+- **setup_dev_env.sh**：开发环境变量设置
+- **setup_dev_complete.sh**：完整开发环境设置
+- **cli_tool.sh**：CLI 工具启动脚本
 
 ---
 
 ## 🛠️ 服务管理
 
-### 查看服务状态
+### Windows/Linux 版本
 
-```bash
-docker-compose -f docker-compose.production.yml ps
-```
-
-### 查看服务日志
-
-```bash
-# 查看所有服务日志
-docker-compose -f docker-compose.production.yml logs -f
-
-# 查看特定服务日志
-docker-compose -f docker-compose.production.yml logs -f backend
-docker-compose -f docker-compose.production.yml logs -f frontend
-docker-compose -f docker-compose.production.yml logs -f mysql
-```
-
-### 重启服务
-
-```bash
-# 重启所有服务
-docker-compose -f docker-compose.production.yml restart
-
-# 重启特定服务
-docker-compose -f docker-compose.production.yml restart backend
-docker-compose -f docker-compose.production.yml restart frontend
-```
-
-### 停止服务
-
-```bash
-docker-compose -f docker-compose.production.yml down
-```
-
-### 清理资源
-
-```bash
-# 停止并删除所有容器
-docker-compose -f docker-compose.production.yml down
-
-# 删除所有相关镜像
-docker rmi networktraffic-backend networktraffic-frontend
-
-# 删除数据卷 (⚠️ 会删除数据库数据)
-docker volume rm networktraffic_mysql_data_prod
-```
+- 查看服务状态：
+  ```bash
+  docker-compose -f docker-compose.production.yml ps
+  ```
+- 查看服务日志：
+  ```bash
+  docker-compose -f docker-compose.production.yml logs -f
+  docker-compose -f docker-compose.production.yml logs -f backend
+  docker-compose -f docker-compose.production.yml logs -f frontend
+  docker-compose -f docker-compose.production.yml logs -f mysql
+  ```
+- 重启服务：
+  ```bash
+  docker-compose -f docker-compose.production.yml restart
+  docker-compose -f docker-compose.production.yml restart backend
+  docker-compose -f docker-compose.production.yml restart frontend
+  ```
+- 停止服务：
+  ```bash
+  docker-compose -f docker-compose.production.yml down
+  ```
+- 清理资源：
+  ```bash
+  docker-compose -f docker-compose.production.yml down
+  docker rmi networktraffic-backend networktraffic-frontend
+  docker volume rm networktraffic_mysql_data_prod
+  ```
+  
+- 推荐使用脚本进行服务启动、停止、重启。
+- 日志、端口、资源清理等命令双系统兼容。
 
 ---
 
 ## 🔍 故障排除
 
-### 常见问题
+### Linux 常见问题
 
-#### 1. Docker 未运行
-**错误信息:** `ERROR: Docker is not running or not installed!`
-
-**解决方案:**
-- 启动 Docker Desktop
-- 等待 Docker 服务完全启动
-- 重新运行部署脚本
-
-#### 2. 端口被占用
-**错误信息:** `Bind for 0.0.0.0:23456 failed: port is already allocated`
-
-**解决方案:**
-```bash
-# 查看端口占用
-netstat -ano | findstr :23456
-netstat -ano | findstr :8000
-netstat -ano | findstr :3307
-
-# 停止占用端口的进程
-taskkill /PID <进程ID> /F
-```
-
-#### 3. 前端无法连接后端
-**症状:** 前端页面显示连接错误
-
-**解决方案:**
-1. 检查后端服务状态:
-   ```bash
-   docker-compose -f docker-compose.production.yml ps backend
-   ```
-
-2. 检查后端日志:
-   ```bash
-   docker-compose -f docker-compose.production.yml logs backend
-   ```
-
-3. 验证 API 端点:
-   ```bash
-   curl http://localhost:8000/api/health/
-   ```
-
-#### 4. 数据库连接失败
-**错误信息:** `MySQL connection failed`
-
-**解决方案:**
-1. 检查 MySQL 容器状态:
-   ```bash
-   docker-compose -f docker-compose.production.yml ps mysql
-   ```
-
-2. 查看 MySQL 日志:
-   ```bash
-   docker-compose -f docker-compose.production.yml logs mysql
-   ```
-
-3. 重启 MySQL 服务:
-   ```bash
-   docker-compose -f docker-compose.production.yml restart mysql
-   ```
-
-#### 5. 构建失败
-**错误信息:** `ERROR: Backend/Frontend Docker build failed!`
-
-**解决方案:**
-1. 清理 Docker 缓存:
-   ```bash
-   docker system prune -a
-   ```
-
-2. 重新构建:
-   ```bash
-   build-backend.bat
-   build-frontend.bat
-   ```
-
-### 日志分析
-
-#### 后端日志位置
-- 容器日志: `docker logs network_traffic_backend_prod`
-- 应用日志: `logs/` 目录
-
-#### 前端日志位置
-- 容器日志: `docker logs network_traffic_frontend_prod`
-- 浏览器开发者工具控制台
-
-#### 数据库日志位置
-- 容器日志: `docker logs network_traffic_mysql_prod`
+- **权限问题**：
+  ```bash
+  newgrp docker
+  # 或 sudo reboot
+  ```
+- **端口被占用**：
+  ```bash
+  sudo netstat -tulpn | grep :23456
+  sudo netstat -tulpn | grep :8000
+  sudo kill -9 <进程ID>
+  ```
+- **SELinux 问题**：
+  ```bash
+  sudo setenforce 0
+  sudo sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+  ```
+- **内存不足**：
+  ```bash
+  sudo fallocate -l 2G /swapfile
+  sudo chmod 600 /swapfile
+  sudo mkswap /swapfile
+  sudo swapon /swapfile
+  echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+  ```
+- **日志查看**：
+  ```bash
+  docker-compose -f docker-compose.production.yml logs -f
+  docker-compose -f docker-compose.production.yml logs -f backend
+  docker-compose -f docker-compose.production.yml logs -f frontend
+  docker-compose -f docker-compose.production.yml logs -f mysql
+  ```
 
 ---
 
@@ -322,8 +292,8 @@ MYSQL_ROOT_PASSWORD=123456
 # Django 配置
 SECRET_KEY=network-traffic-production-secret-key-2024-change-this-in-production
 DEBUG=False
-ALLOWED_HOSTS=localhost,127.0.0.1,your-domain.com,www.your-domain.com
-CSRF_TRUSTED_ORIGINS=http://localhost:3001,https://your-domain.com,https://www.your-domain.com
+ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,*,your-domain.com,www.your-domain.com
+CSRF_TRUSTED_ORIGINS=http://localhost:3001,http://localhost:23456,http://127.0.0.1:23456,http://0.0.0.0:23456,http://*:23456,https://your-domain.com,https://www.your-domain.com
 
 # 前端配置
 VITE_API_BASE_URL=http://localhost:8000
@@ -360,29 +330,17 @@ NetworkTraffic/
 
 ## 📞 技术支持
 
-### 获取帮助
-
 1. **查看项目文档:**
-   - `README.md` - 项目概述
-   - `SCRIPTS_GUIDE.md` - 脚本使用指南
-
+   - `README.md` - 项目概述、部署说明
 2. **检查日志文件:**
    - 应用日志: `logs/` 目录
    - Docker 日志: 使用 `docker logs` 命令
-
 3. **常见问题:**
-   - 确保 Docker Desktop 正在运行
+   - 确保 Docker 正常运行
    - 检查端口是否被占用
-   - 验证网络连接
+   - 验证网络连接和防火墙设置
 
-### 联系支持
-
-如遇到无法解决的问题，请提供以下信息:
-- 操作系统版本
-- Docker 版本
-- Node.js 版本
-- 错误日志
-- 复现步骤
+如遇到无法解决的问题，请提供：操作系统版本、Docker/Node.js 版本、错误日志、复现步骤、网络环境等信息。
 
 ---
 
@@ -390,7 +348,7 @@ NetworkTraffic/
 
 部署完成后，请验证以下项目:
 
-- [ ] Docker Desktop 正在运行
+- [ ] Docker 服务正在运行
 - [ ] 所有服务容器正在运行
 - [ ] 前端页面可以访问 (http://localhost:23456)
 - [ ] 后端 API 可以访问 (http://localhost:8000)
@@ -398,15 +356,19 @@ NetworkTraffic/
 - [ ] 数据库连接正常
 - [ ] 文件上传功能正常
 - [ ] 聊天功能正常
+- [ ] 防火墙规则已配置 (内网部署)
+- [ ] 网络访问正常 (内网部署)
 
 ---
 
 ## 📝 注意事项
 
-1. **首次构建时间较长**：Docker镜像构建可能需要5-15分钟
-2. **确保Docker Desktop运行**：所有脚本都需要Docker环境
-3. **不要关闭构建窗口**：构建过程中请保持窗口打开
-4. **模型服务**：当前版本中模型API服务未启动，相关功能会显示"服务暂时不可用"的提示
+1. **首次构建时间较长**：Docker 镜像构建可能需要 5-15 分钟
+2. **确保 Docker 服务运行**：所有脚本都需要 Docker 环境
+3. **不要关闭终端/窗口**：构建过程中请保持窗口打开
+4. **权限问题**：Linux 某些操作需要 root 权限
+5. **网络配置**：内网部署需要额外的网络和防火墙配置
+6. **日志查看**：推荐使用 `docker-compose logs` 查看详细日志
 
 ---
 
