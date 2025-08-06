@@ -35,8 +35,8 @@ if not exist ".env" (
     echo # Django Configuration
     echo SECRET_KEY=network-traffic-production-secret-key-2024-change-this-in-production
     echo DEBUG=False
-    echo ALLOWED_HOSTS=localhost,127.0.0.1,your-domain.com,www.your-domain.com
-    echo CSRF_TRUSTED_ORIGINS=http://localhost:3001,https://your-domain.com,https://www.your-domain.com
+    echo ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,*,your-domain.com,www.your-domain.com
+    echo CSRF_TRUSTED_ORIGINS=http://localhost:3001,http://localhost:23456,http://127.0.0.1:23456,http://0.0.0.0:23456,http://*:23456,https://your-domain.com,https://www.your-domain.com
     echo.
     echo # Frontend Configuration
     echo VITE_API_BASE_URL=http://localhost:8000

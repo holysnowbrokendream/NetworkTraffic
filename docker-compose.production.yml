@@ -43,7 +43,7 @@ services:
       - ./HTTP/staticfiles:/app/staticfiles
       - ./logs:/app/logs
     ports:
-      - "8000:8000"
+      - "0.0.0.0:8000:8000"  # 绑定到所有网络接口
     depends_on:
       mysql:
         condition: service_healthy
@@ -68,7 +68,7 @@ services:
     environment:
       - VITE_API_BASE_URL=${VITE_API_BASE_URL}
     ports:
-      - "23456:80"
+      - "0.0.0.0:23456:80"  # 绑定到所有网络接口
     depends_on:
       - backend
     networks:

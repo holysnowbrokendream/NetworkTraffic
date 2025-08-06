@@ -28,9 +28,15 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost', '127.0.0.1', 
+    '0.0.0.0',  # 允许所有IP访问
+    '*',  # 允许所有主机
 ]
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
+    'http://localhost:23456',  # 前端端口
+    'http://127.0.0.1:23456',
+    'http://0.0.0.0:23456',
+    'http://*:23456',  # 允许所有IP的前端访问
 ]
 
 
