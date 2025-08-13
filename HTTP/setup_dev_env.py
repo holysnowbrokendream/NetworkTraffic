@@ -42,7 +42,7 @@ def setup_dev_environment():
     print("  - 用户名: root")
     print("  - 密码: 123456")
     print("  - 主机: localhost")
-    print("  - 端口: 3306")
+    print("  - 端口: 3307")
     print("\nDjango配置:")
     print("  - DEBUG: True")
     print("  - 环境: development")
@@ -60,7 +60,7 @@ def check_mysql_connection():
             'host': config('DB_HOST', default='localhost'),
             'user': config('DB_USER', default='root'),
             'password': config('DB_PASSWORD', default='123456'),
-            'port': config('DB_PORT', default=3306, cast=int)
+            'port': config('DB_PORT', default=3307, cast=int)
         }
         
         # 尝试连接

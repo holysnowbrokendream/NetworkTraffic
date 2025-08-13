@@ -29,7 +29,7 @@ if not exist ".env" (
     echo DB_USER=nwt_user
     echo DB_PASSWORD=123456
     echo DB_HOST=mysql
-    echo DB_PORT=3306
+    echo DB_PORT=3307
     echo MYSQL_ROOT_PASSWORD=123456
     echo.
     echo # Django Configuration

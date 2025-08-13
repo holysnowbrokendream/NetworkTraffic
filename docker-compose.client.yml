@@ -10,7 +10,7 @@ services:
       MYSQL_USER: nwt_user
       MYSQL_PASSWORD: 123456
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql/init:/docker-entrypoint-initdb.d
@@ -32,12 +32,12 @@ services:
       - DB_USER=${DB_USER:-nwt_user}
       - DB_PASSWORD=${DB_PASSWORD:-123456}
       - DB_HOST=${DB_HOST:-mysql}
-      - DB_PORT=${DB_PORT:-3306}
+      - DB_PORT=${DB_PORT:-3307}
     ports:
       - "8000:8000"
     volumes:
       # 挂载配置文件，允许客户修改
-      - ./config:/app/config:ro
+      - ./config:/app/config
       - ./logs:/app/logs
       - ./HTTP/media:/app/media
       - ./HTTP/staticfiles:/app/staticfiles

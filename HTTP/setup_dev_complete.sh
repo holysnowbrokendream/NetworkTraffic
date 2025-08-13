@@ -45,7 +45,7 @@ print_success "✅ 开发环境设置完成！"
 echo
 
 echo "📋 当前配置:"
-echo "  数据库: localhost:3306/network_traffic"
+echo "  数据库: localhost:3307/network_traffic"
 echo "  用户名: nwt_user"
 echo "  密码: 123456"
 echo "  Django: DEBUG=True"

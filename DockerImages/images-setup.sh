@@ -23,7 +23,7 @@ DB_NAME=network_traffic
 DB_USER=nwt_user
 DB_PASSWORD=123456
 DB_HOST=mysql
-DB_PORT=3306
+DB_PORT=3307
 EOF
 
 echo "Environment configuration created ✓"

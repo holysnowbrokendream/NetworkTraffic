@@ -32,7 +32,7 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_PORT=3306
+      - DB_PORT=3307
       - SECRET_KEY=${SECRET_KEY}
       # 动态配置，支持运行时覆盖
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,*}

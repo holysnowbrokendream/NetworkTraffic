@@ -59,7 +59,7 @@ DB_NAME=NetworkTraffic
 DB_USER=nwt_user
 DB_PASSWORD=123456
 DB_HOST=mysql
-DB_PORT=3306
+DB_PORT=3307
 MYSQL_ROOT_PASSWORD=123456
 
 # Django Configuration

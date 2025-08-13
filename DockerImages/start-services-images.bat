@@ -57,7 +57,7 @@ if %errorlevel% equ 0 (
     echo ✅ Services started successfully!
     echo.
     echo 📋 Service Status:
-    echo   MySQL: localhost:3306
+    echo   MySQL: localhost:3307
     echo   Backend: localhost:8000
     echo   Frontend: localhost:23456
     echo   Nginx: localhost:80

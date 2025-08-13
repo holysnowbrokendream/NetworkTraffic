@@ -34,7 +34,7 @@ if [ -f .env ]; then
     print_success "✅ 环境变量设置完成！"
     echo
     echo "📋 当前配置:"
-    echo "  数据库: localhost:3306"
+    echo "  数据库: localhost:3307"
     echo "  用户名: nwt_user"
     echo "  密码: 123456"
     echo "  数据库名: network_traffic"

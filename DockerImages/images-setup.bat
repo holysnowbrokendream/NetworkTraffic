@@ -31,7 +31,7 @@ echo DB_NAME=network_traffic
 echo DB_USER=nwt_user
 echo DB_PASSWORD=123456
 echo DB_HOST=mysql
-echo DB_PORT=3306
+echo DB_PORT=3307
 ) > ..\.env
 
 echo Environment configuration created ✓
