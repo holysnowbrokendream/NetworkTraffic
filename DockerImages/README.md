@@ -26,6 +26,14 @@
 4. 运行 `images-setup.bat` 配置环境
 5. 运行 `start-services-images.bat` 启动服务
 
+**内网部署额外步骤：**
+6. 配置防火墙规则（允许内网访问）：
+   ```bash
+   cd ..
+   cd HTTP
+   configure_firewall.bat
+   ```
+
 ### Linux/Mac用户
 1. 确保Docker服务正在运行
 2. 给脚本添加执行权限：`chmod +x import-images.sh images-setup.sh start-services-images.sh`
@@ -34,6 +42,15 @@
 5. 运行 `./images-setup.sh` 配置环境
 6. 运行 `./start-services-images.sh` 启动服务
 
+**内网部署额外步骤：**
+7. 配置防火墙规则（允许内网访问）：
+   ```bash
+   cd ..
+   cd HTTP
+   chmod +x configure_firewall.sh
+   sudo ./configure_firewall.sh
+   ```
+
 ## 注意事项
 
 - 导入镜像需要几分钟时间，请耐心等待
@@ -41,6 +58,7 @@
 - 导入完成后，镜像会出现在 `docker images` 列表中
 - 环境配置脚本会自动检测主机IP并生成配置文件
 - 首次启动服务时，数据库初始化可能需要额外时间
+- **内网部署必须配置防火墙**：使用 `configure_firewall.bat/sh` 开放必要端口
 
 ## 访问地址
 
@@ -89,9 +107,19 @@ DockerImages/
    - 检查数据库配置是否正确
    - 查看MySQL容器状态：`docker ps`
 
+4. **内网设备无法访问服务**
+   - 检查防火墙配置：确保已运行防火墙配置脚本
+   - 验证端口开放：检查8000、23456、3307端口是否开放
+   - 检查网络连通性：从内网设备ping服务器IP
+   - 查看防火墙状态：
+   - Windows: `netsh advfirewall firewall show rule name="NetworkTraffic*"`
+   - Linux: `sudo firewall-cmd --list-ports` 或 `sudo ufw status`
+
 ### 获取帮助
 
 如果遇到问题，请：
 1. 查看容器日志
 2. 检查Docker服务状态
 3. 参考项目根目录的部署文档
+
+
