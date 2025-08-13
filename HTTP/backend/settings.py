@@ -26,11 +26,40 @@ SECRET_KEY = 'django-insecure-8z$af)c&5!4f$yb^gkco&v07exdajog1z8ioemkx932#p#di7*
 # 调试模式，生产环境请设为False
 DEBUG = True
 
+# 运行时配置支持
+import os
+import json
+from pathlib import Path
+
+def get_runtime_config():
+    """获取运行时配置"""
+    try:
+        config_file = Path("/app/config/runtime.json")
+        if config_file.exists():
+            with open(config_file, 'r') as f:
+                return json.load(f)
+    except:
+        pass
+    return {}
+
+runtime_config = get_runtime_config()
+
+# 基础ALLOWED_HOSTS配置
 ALLOWED_HOSTS = [
     'localhost', '127.0.0.1', 
     '0.0.0.0',  # 允许所有IP访问
     '*',  # 允许所有主机
 ]
+
+# 从运行时配置或环境变量获取额外的主机
+if runtime_config.get('ALLOWED_HOSTS'):
+    additional_hosts = runtime_config['ALLOWED_HOSTS'].split(',')
+    ALLOWED_HOSTS.extend(additional_hosts)
+elif os.getenv('ALLOWED_HOSTS'):
+    additional_hosts = os.getenv('ALLOWED_HOSTS').split(',')
+    ALLOWED_HOSTS.extend(additional_hosts)
+
+# 基础CSRF_TRUSTED_ORIGINS配置
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:23456',  # 前端端口
@@ -38,6 +67,14 @@ CSRF_TRUSTED_ORIGINS = [
     'http://0.0.0.0:23456',
     'http://*:23456',  # 允许所有IP的前端访问
 ]
+
+# 从运行时配置或环境变量获取额外的CSRF源
+if runtime_config.get('CSRF_TRUSTED_ORIGINS'):
+    additional_csrf = runtime_config['CSRF_TRUSTED_ORIGINS'].split(',')
+    CSRF_TRUSTED_ORIGINS.extend(additional_csrf)
+elif os.getenv('CSRF_TRUSTED_ORIGINS'):
+    additional_csrf = os.getenv('CSRF_TRUSTED_ORIGINS').split(',')
+    CSRF_TRUSTED_ORIGINS.extend(additional_csrf)
 
 
 # Application definition

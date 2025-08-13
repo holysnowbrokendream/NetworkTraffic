@@ -34,13 +34,17 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_PORT=3306
       - SECRET_KEY=${SECRET_KEY}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
+      # 动态配置，支持运行时覆盖
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,*}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-http://localhost:23456,http://0.0.0.0:23456}
+      - DJANGO_SETTINGS_MODULE=backend.settings
     volumes:
       - ./HTTP:/app
       - ./HTTP/media:/app/media
       - ./HTTP/temp:/app/temp
       - ./HTTP/staticfiles:/app/staticfiles
+      # 挂载配置文件，允许客户修改
+      - ./config:/app/config:ro
       - ./logs:/app/logs
     ports:
       - "0.0.0.0:8000:8000"  # 绑定到所有网络接口

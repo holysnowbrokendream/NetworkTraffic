@@ -139,4 +139,5 @@ config.ini
 # Docker
 # ========================================
 .dockerignore
+DockerImages/*.tar
 docker-compose.override.yml

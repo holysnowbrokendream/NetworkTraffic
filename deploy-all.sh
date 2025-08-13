@@ -85,6 +85,21 @@ print_success "Docker Compose is available ✓"
 
 echo
 echo "========================================"
+echo "Step 0: Setting up Conda Environment"
+echo "========================================"
+echo
+
+print_status "Preparing Conda environment..."
+if ./build-conda.sh; then
+    print_success "Conda environment ready ✓"
+else
+    print_error "Conda environment setup failed!"
+    echo "Please check the error messages above."
+    exit 1
+fi
+
+echo
+echo "========================================"
 echo "Step 1: Building Backend"
 echo "========================================"
 echo

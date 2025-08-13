@@ -134,38 +134,84 @@ NetworkTraffic 是一个基于 Django + Vue.js 的网络流量分析系统，采
 
 ## 🚀 快速部署
 
-### Windows 版本
+### 方法一：Docker 镜像部署（推荐）
 
-1. **一键部署**
+#### Windows 版本
+1. **导入预构建镜像**
+   ```bash
+   cd DockerImages
+   import-images.bat
+   ```
+2. **配置环境**
+   ```bash
+   cd ..
+   images-setup.bat
+   ```
+3. **启动服务**
+   ```bash
+   start-services-images.bat
+   ```
+
+#### Linux 版本
+1. **导入预构建镜像**
+   ```bash
+   cd DockerImages
+   chmod +x import-images.sh images-setup.sh start-services-images.sh
+   ./import-images.sh
+   ```
+2. **配置环境**
+   ```bash
+   cd ..
+   ./images-setup.sh
+   ```
+3. **启动服务**
+   ```bash
+   ./start-services-images.sh
+   ```
+
+**优势：**
+- ✅ 无需重新构建镜像，部署速度快
+- ✅ 自动检测主机IP，支持内网访问
+- ✅ 配置简单，适合客户部署
+- ✅ 包含完整的应用栈（后端、前端、数据库）
+
+### 方法二：源码构建部署
+
+#### Windows 版本
+
+1. **内网部署**
+   - 若需要将项目部署在内网，请优先执行以下操作，否则请跳过该步骤：
+   - 网络访问配置：`cd HTTP && configure_network_access.bat`
+   - 防火墙配置：`cd HTTP && configure_firewall.bat`
+2.1. **一键部署**
    ```bash
    deploy-all.bat
    ```
-2. **分步部署**
+2.2. **分步部署**
    - 构建后端：`build-backend.bat`
    - 构建前端：`build-frontend.bat`
    - 启动服务：`start-services.bat`
-3. **内网部署**
-   - 网络访问配置：`cd HTTP && configure_network_access.bat`
-   - 防火墙配置：`cd HTTP && configure_firewall.bat`
 
-### Linux 版本
+#### Linux 版本
 
 1. **赋予脚本执行权限**
    ```bash
    chmod +x deploy-all.sh build-backend.sh build-frontend.sh start-services.sh
-   chmod +x HTTP/configure_firewall.sh HTTP/configure_network_access.sh
    ```
-2. **一键部署**
+2. **内网部署**
+   - 若需要将项目部署在内网，请优先执行以下操作，否则请跳过该步骤：
+   - 执行权限赋予：`chmod +x HTTP/configure_firewall.sh HTTP/configure_network_access.sh`
+   - 网络访问配置：`cd HTTP && configure_network_access.sh`
+   - 防火墙配置：`cd HTTP && configure_firewall.sh`
+3.1. **一键部署**
    ```bash
    ./deploy-all.sh
    ```
-3. **分步部署**
+3.2. **分步部署**
    - 构建后端：`./build-backend.sh`
    - 构建前端：`./build-frontend.sh`
    - 启动服务：`./start-services.sh`
-4. **内网部署**
-   - 网络访问配置：`cd HTTP && ./configure_network_access.sh`
-   - 防火墙配置：`cd HTTP && sudo ./configure_firewall.sh`
+
 
 ---
 
@@ -175,6 +221,12 @@ NetworkTraffic 是一个基于 Django + Vue.js 的网络流量分析系统，采
 
 ### Windows 版本
 
+#### Docker 镜像部署脚本
+- **DockerImages/import-images.bat**：导入预构建的 Docker 镜像
+- **DockerImages/images-setup.bat**：自动配置环境（检测IP、生成配置文件）
+- **DockerImages/start-services-images.bat**：启动镜像部署的服务
+
+#### 源码构建部署脚本
 - **deploy-all.bat**：一键完整部署脚本
 - **build-backend.bat**：构建后端 Docker 镜像
 - **build-frontend.bat**：构建前端应用和镜像
@@ -187,6 +239,12 @@ NetworkTraffic 是一个基于 Django + Vue.js 的网络流量分析系统，采
 
 ### Linux 版本
 
+#### Docker 镜像部署脚本
+- **DockerImages/import-images.sh**：导入预构建的 Docker 镜像
+- **DockerImages/images-setup.sh**：自动配置环境（检测IP、生成配置文件）
+- **DockerImages/start-services-images.sh**：启动镜像部署的服务
+
+#### 源码构建部署脚本
 - **deploy-all.sh**：一键完整部署脚本
 - **build-backend.sh**：构建后端 Docker 镜像
 - **build-frontend.sh**：构建前端应用和镜像
@@ -201,7 +259,31 @@ NetworkTraffic 是一个基于 Django + Vue.js 的网络流量分析系统，采
 
 ## 🛠️ 服务管理
 
-### Windows/Linux 版本
+### Docker 镜像部署服务管理
+
+- 查看服务状态：
+  ```bash
+  docker-compose -f docker-compose.client.yml ps
+  ```
+- 查看服务日志：
+  ```bash
+  docker-compose -f docker-compose.client.yml logs -f
+  docker-compose -f docker-compose.client.yml logs -f backend
+  docker-compose -f docker-compose.client.yml logs -f frontend
+  docker-compose -f docker-compose.client.yml logs -f mysql
+  ```
+- 重启服务：
+  ```bash
+  docker-compose -f docker-compose.client.yml restart
+  docker-compose -f docker-compose.client.yml restart backend
+  docker-compose -f docker-compose.client.yml restart frontend
+  ```
+- 停止服务：
+  ```bash
+  docker-compose -f docker-compose.client.yml down
+  ```
+
+### 源码构建部署服务管理
 
 - 查看服务状态：
   ```bash
@@ -346,6 +428,24 @@ NetworkTraffic/
 
 ## ✅ 部署验证清单
 
+### Docker 镜像部署验证
+
+部署完成后，请验证以下项目:
+
+- [ ] Docker 服务正在运行
+- [ ] 预构建镜像已成功导入
+- [ ] 环境配置文件 (.env) 已生成
+- [ ] 所有服务容器正在运行
+- [ ] 前端页面可以访问 (http://localhost:23456)
+- [ ] 后端 API 可以访问 (http://localhost:8000)
+- [ ] 可以正常登录 (admin/123456)
+- [ ] 数据库连接正常
+- [ ] 内网访问正常 (通过主机IP访问)
+- [ ] 文件上传功能正常
+- [ ] 聊天功能正常
+
+### 源码构建部署验证
+
 部署完成后，请验证以下项目:
 
 - [ ] Docker 服务正在运行
@@ -365,6 +465,7 @@ NetworkTraffic/
 
 1. **首次构建时间较长**：Docker 镜像构建可能需要 5-15 分钟
 2. **确保 Docker 服务运行**：所有脚本都需要 Docker 环境
+3. **切换国内 Docker 镜像源**: 很多时候
 3. **不要关闭终端/窗口**：构建过程中请保持窗口打开
 4. **权限问题**：Linux 某些操作需要 root 权限
 5. **网络配置**：内网部署需要额外的网络和防火墙配置

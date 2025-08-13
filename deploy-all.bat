@@ -28,6 +28,21 @@ pause
 
 echo.
 echo ========================================
+echo Step 0: Setting up Conda Environment
+echo ========================================
+echo.
+echo Preparing Conda environment...
+call build-conda.bat
+if %errorlevel% neq 0 (
+    echo ERROR: Conda environment setup failed!
+echo Please check the error messages above.
+    pause
+    exit /b 1
+)
+echo Conda environment ready ✓
+echo.
+
+echo ========================================
 echo Step 1: Building Backend
 echo ========================================
 echo.
