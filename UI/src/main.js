@@ -9,8 +9,9 @@ import ElementPlus from 'element-plus'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 
-// 配置 axios 基础 URL
-axios.defaults.baseURL = 'http://localhost:8000'
+// 配置 axios 基础 URL - 支持环境变量
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+axios.defaults.baseURL = apiBaseUrl
 
 // 添加全局样式来防止滚动，并支持主题切换
 const style = document.createElement('style')
